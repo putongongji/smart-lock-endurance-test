@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Play, Pause, Square, Settings, Clock, Hash, Zap } from 'lucide-react'
+import { Play, Pause, Square, Settings, Clock, Hash, Bluetooth, Zap, Lock } from 'lucide-react'
 
 const TestControl = () => {
   const [testStatus, setTestStatus] = useState('stopped') // stopped, running, paused
@@ -112,252 +112,286 @@ const TestControl = () => {
   }
 
   return (
-    <div className="px-4 py-6 sm:px-0">
-      <div className="border-4 border-dashed border-gray-200 rounded-lg p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">测试控制</h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 测试配置 */}
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Settings className="w-5 h-5 mr-2" />
-              测试配置
-            </h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  测试模式
-                </label>
-                <select 
-                  value={testMode} 
-                  onChange={(e) => setTestMode(e.target.value)}
-                  className="input"
-                  disabled={testStatus === 'running'}
-                >
-                  <option value="count">按次数测试</option>
-                  <option value="time">按时间测试</option>
-                  <option value="continuous">连续测试</option>
-                </select>
-              </div>
-              
-              {testMode === 'count' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    目标次数
-                  </label>
-                  <input 
-                    type="number" 
-                    value={testConfig.targetCount}
-                    onChange={(e) => setTestConfig(prev => ({...prev, targetCount: parseInt(e.target.value)}))}
-                    className="input"
-                    disabled={testStatus === 'running'}
-                  />
-                </div>
-              )}
-              
-              {testMode === 'time' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    目标时长 (分钟)
-                  </label>
-                  <input 
-                    type="number" 
-                    value={testConfig.targetDuration}
-                    onChange={(e) => setTestConfig(prev => ({...prev, targetDuration: parseInt(e.target.value)}))}
-                    className="input"
-                    disabled={testStatus === 'running'}
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  测试间隔 (秒)
-                </label>
-                <input 
-                  type="number" 
-                  value={testConfig.interval}
-                  onChange={(e) => setTestConfig(prev => ({...prev, interval: parseInt(e.target.value)}))}
-                  className="input"
-                  disabled={testStatus === 'running'}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  智能锁型号
-                </label>
-                <select 
-                  value={testConfig.lockModel} 
-                  onChange={(e) => setTestConfig(prev => ({...prev, lockModel: e.target.value}))}
-                  className="input"
-                  disabled={testStatus === 'running'}
-                >
-                  <option value="SL-001">SL-001 基础款</option>
-                  <option value="SL-002">SL-002 标准款</option>
-                  <option value="SL-003">SL-003 高级款</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  测试类型
-                </label>
-                <select 
-                  value={testConfig.testType} 
-                  onChange={(e) => setTestConfig(prev => ({...prev, testType: e.target.value}))}
-                  className="input"
-                  disabled={testStatus === 'running'}
-                >
-                  <option value="unlock">仅开锁</option>
-                  <option value="lock">仅上锁</option>
-                  <option value="both">开锁+上锁</option>
-                </select>
-              </div>
-            </div>
+    <div className="p-4 space-y-4">
+      {/* 蓝牙连接状态 */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Bluetooth className="w-5 h-5 text-blue-500 mr-2" />
+            <span className="text-sm font-medium text-gray-900">智能锁连接状态</span>
           </div>
-          
-          {/* 测试控制和状态 */}
-          <div className="space-y-6">
-            {/* 控制按钮 */}
-            <div className="card p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">测试控制</h2>
-              <div className="flex space-x-4">
-                {testStatus === 'stopped' && (
-                  <button 
-                    onClick={startTest}
-                    className="btn btn-success px-6 py-3 flex items-center"
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    开始测试
-                  </button>
-                )}
-                
-                {testStatus === 'running' && (
-                  <>
-                    <button 
-                      onClick={pauseTest}
-                      className="btn btn-warning px-6 py-3 flex items-center"
-                    >
-                      <Pause className="w-5 h-5 mr-2" />
-                      暂停
-                    </button>
-                    <button 
-                      onClick={stopTest}
-                      className="btn btn-danger px-6 py-3 flex items-center"
-                    >
-                      <Square className="w-5 h-5 mr-2" />
-                      停止
-                    </button>
-                  </>
-                )}
-                
-                {testStatus === 'paused' && (
-                  <>
-                    <button 
-                      onClick={resumeTest}
-                      className="btn btn-success px-6 py-3 flex items-center"
-                    >
-                      <Play className="w-5 h-5 mr-2" />
-                      继续
-                    </button>
-                    <button 
-                      onClick={stopTest}
-                      className="btn btn-danger px-6 py-3 flex items-center"
-                    >
-                      <Square className="w-5 h-5 mr-2" />
-                      停止
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* 测试进度 */}
-            {testStatus !== 'stopped' && (
-              <div className="card p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">测试进度</h2>
-                
-                {testMode !== 'continuous' && (
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>进度</span>
-                      <span>{getProgressPercentage().toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${getProgressPercentage()}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">已执行次数</p>
-                    <p className="text-lg font-semibold">{currentProgress.count}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">已用时长</p>
-                    <p className="text-lg font-semibold">
-                      {Math.floor(currentProgress.duration / 60)}:{(currentProgress.duration % 60).toString().padStart(2, '0')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">下次执行</p>
-                    <p className="text-lg font-semibold">{currentProgress.nextUnlockIn}秒</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">最后执行</p>
-                    <p className="text-lg font-semibold">
-                      {currentProgress.lastUnlockTime ? currentProgress.lastUnlockTime.toLocaleTimeString() : '-'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+            <span className="text-xs text-green-600 font-medium">已连接</span>
+          </div>
+        </div>
+        <div className="mt-2 text-xs text-gray-500">
+          设备: SmartLock Pro • 信号强度: -45dBm • 电量: 85%
+        </div>
+      </div>
+        
+      {/* 测试状态卡片 */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium text-gray-900">测试状态</h2>
+          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+            testStatus === 'running' ? 'bg-green-100 text-green-800' :
+            testStatus === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {testStatus === 'running' ? '运行中' : testStatus === 'paused' ? '已暂停' : '已停止'}
           </div>
         </div>
         
-        {/* 实时日志 */}
-        {logs.length > 0 && (
-          <div className="card p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">实时日志</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">次数</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">结果</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">响应时间</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {logs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.timestamp}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.count}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.action}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          log.result === '成功' ? 'bg-success-100 text-success-800' : 'bg-danger-100 text-danger-800'
-                        }`}>
-                          {log.result}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.responseTime}ms</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">测试模式:</span>
+            <span className="text-sm font-medium">{testMode === 'count' ? '按次数' : testMode === 'time' ? '按时间' : '连续测试'}</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">当前进度:</span>
+            <span className="text-sm font-medium">
+              {testMode === 'count' ? `${currentProgress.count}/${testConfig.targetCount}` :
+               testMode === 'time' ? `${Math.floor(currentProgress.duration / 60)}:${(currentProgress.duration % 60).toString().padStart(2, '0')}/${Math.floor(testConfig.targetDuration)}:00` :
+               `${currentProgress.count} 次`}
+            </span>
+          </div>
+          
+          {testStatus !== 'stopped' && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">下次测试:</span>
+              <span className="text-sm font-medium text-blue-600">{currentProgress.nextUnlockIn}秒</span>
+            </div>
+          )}
+          
+          {/* 进度条 */}
+          {testMode !== 'continuous' && (
+            <div className="mt-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>进度</span>
+                <span>
+                  {getProgressPercentage().toFixed(1)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                  style={{
+                    width: `${getProgressPercentage()}%`
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 测试控制按钮 */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <h3 className="text-base font-medium text-gray-900 mb-3">测试控制</h3>
+        
+        <div className="space-y-3">
+          {testStatus === 'stopped' ? (
+            <button
+              onClick={startTest}
+              className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              开始蓝牙开锁测试
+            </button>
+          ) : testStatus === 'running' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={pauseTest}
+                className="flex items-center justify-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+              >
+                <Pause className="w-4 h-4 mr-1" />
+                暂停
+              </button>
+              <button
+                onClick={stopTest}
+                className="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                <Square className="w-4 h-4 mr-1" />
+                停止
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={resumeTest}
+                className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                <Play className="w-4 h-4 mr-1" />
+                继续
+              </button>
+              <button
+                onClick={stopTest}
+                className="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                <Square className="w-4 h-4 mr-1" />
+                停止
+              </button>
+            </div>
+          )}
+          
+          {/* 手动测试按钮 */}
+          <button
+            className="w-full flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+          >
+            <Lock className="w-4 h-4 mr-2" />
+            手动开锁测试
+          </button>
+        </div>
+      </div>
+
+      {/* 测试配置 */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+        <h3 className="text-base font-medium text-gray-900 mb-3">测试配置</h3>
+        
+        <div className="space-y-4">
+          {/* 测试模式选择 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">测试模式</label>
+            <select 
+              value={testMode} 
+              onChange={(e) => setTestMode(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              disabled={testStatus !== 'stopped'}
+            >
+              <option value="count">按次数测试</option>
+              <option value="time">按时间测试</option>
+              <option value="continuous">连续测试</option>
+            </select>
+          </div>
+          
+          {/* 目标次数/时长 */}
+          {testMode === 'count' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">目标测试次数</label>
+              <input
+                type="number"
+                value={testConfig.targetCount}
+                onChange={(e) => setTestConfig({...testConfig, targetCount: parseInt(e.target.value) || 0})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                disabled={testStatus !== 'stopped'}
+                min="1"
+                placeholder="输入测试次数"
+              />
+            </div>
+          )}
+          
+          {testMode === 'time' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">测试时长（分钟）</label>
+              <input
+                type="number"
+                value={testConfig.targetDuration}
+                onChange={(e) => setTestConfig({...testConfig, targetDuration: parseInt(e.target.value) || 0})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                disabled={testStatus !== 'stopped'}
+                min="1"
+                placeholder="输入测试时长"
+              />
+            </div>
+          )}
+          
+          {/* 测试间隔 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">测试间隔（秒）</label>
+            <input
+              type="number"
+              value={testConfig.interval}
+              onChange={(e) => setTestConfig({...testConfig, interval: parseInt(e.target.value) || 1})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              disabled={testStatus !== 'stopped'}
+              min="1"
+              placeholder="输入间隔时间"
+            />
+          </div>
+          
+          {/* 智能锁型号 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">智能锁型号</label>
+            <select 
+              value={testConfig.lockModel} 
+              onChange={(e) => setTestConfig({...testConfig, lockModel: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              disabled={testStatus !== 'stopped'}
+            >
+              <option value="SL-001">SL-001 基础款</option>
+              <option value="SL-002">SL-002 标准款</option>
+              <option value="SL-003">SL-003 高级款</option>
+            </select>
+          </div>
+          
+          {/* 测试类型 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">测试类型</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setTestConfig({...testConfig, testType: 'unlock'})}
+                className={`px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  testConfig.testType === 'unlock'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                disabled={testStatus !== 'stopped'}
+              >
+                开锁测试
+              </button>
+              <button
+                onClick={() => setTestConfig({...testConfig, testType: 'lock'})}
+                className={`px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  testConfig.testType === 'lock'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                disabled={testStatus !== 'stopped'}
+              >
+                上锁测试
+              </button>
+              <button
+                onClick={() => setTestConfig({...testConfig, testType: 'both'})}
+                className={`px-3 py-2 text-xs font-medium rounded-md transition-colors ${
+                  testConfig.testType === 'both'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                disabled={testStatus !== 'stopped'}
+              >
+                开锁+上锁
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* 实时日志 */}
+      {logs.length > 0 && (
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <h3 className="text-base font-medium text-gray-900 mb-3">实时日志</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {logs.map((log) => (
+              <div key={log.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500">#{log.count}</span>
+                  <span className={`px-2 py-1 rounded-full font-medium ${
+                    log.result === '成功' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {log.result}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <span>{log.responseTime}ms</span>
+                  <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

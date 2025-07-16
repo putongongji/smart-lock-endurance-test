@@ -48,8 +48,43 @@ npm run build
 npm run deploy
 ```
 
+## 常见问题解决
+
+### 部署错误：Git 退出代码 128
+
+如果遇到 "The process '/usr/bin/git' failed with exit code 128" 错误，这通常是权限问题。解决方案：
+
+1. **检查仓库设置**：
+   - 进入 GitHub 仓库 Settings → Actions → General
+   - 在 "Workflow permissions" 部分选择 "Read and write permissions"
+   - 勾选 "Allow GitHub Actions to create and approve pull requests"
+
+2. **手动启用 Pages**：
+   - 进入 Settings → Pages
+   - Source 选择 "GitHub Actions"
+   - 保存设置
+
+3. **重新运行工作流**：
+   - 进入 Actions 标签页
+   - 选择失败的工作流
+   - 点击 "Re-run jobs"
+
+### 网络连接问题
+
+如果本地推送失败，可以：
+
+1. **等待网络恢复后重试**：
+   ```bash
+   git push origin main
+   ```
+
+2. **使用 GitHub 网页界面**：
+   - 直接在 GitHub 网页上编辑文件
+   - 提交更改会自动触发部署
+
 ## 注意事项
 
 - 确保仓库是公开的，或者你有 GitHub Pro 账户（私有仓库需要付费才能使用 Pages）
 - 首次部署可能需要几分钟时间
 - 如果遇到问题，可以在仓库的 Actions 标签页查看部署日志
+- 工作流已经配置了正确的权限，应该能够自动部署

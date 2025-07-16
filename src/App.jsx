@@ -1,53 +1,53 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Play, BarChart3, Settings, Database, Home } from 'lucide-react'
+import { Play, BarChart3, Settings, Database, Home, Bluetooth } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import TestControl from './pages/TestControl'
 import TestResults from './pages/TestResults'
 import TestSettings from './pages/TestSettings'
 import TestHistory from './pages/TestHistory'
 
-function Navigation() {
+function MobileHeader() {
+  return (
+    <header className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center">
+      <Bluetooth className="w-6 h-6 mr-2" />
+      <h1 className="text-lg font-semibold">智能锁蓝牙测试</h1>
+    </header>
+  )
+}
+
+function BottomNavigation() {
   const location = useLocation()
   
   const navItems = [
     { path: '/', icon: Home, label: '仪表板' },
-    { path: '/test-control', icon: Play, label: '测试控制' },
-    { path: '/test-results', icon: BarChart3, label: '测试结果' },
-    { path: '/test-history', icon: Database, label: '测试历史' },
-    { path: '/settings', icon: Settings, label: '测试设置' }
+    { path: '/test-control', icon: Play, label: '测试' },
+    { path: '/test-results', icon: BarChart3, label: '结果' },
+    { path: '/test-history', icon: Database, label: '历史' },
+    { path: '/settings', icon: Settings, label: '设置' }
   ]
   
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">智能锁测损系统</h1>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = location.pathname === item.path
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      isActive
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        </div>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
+      <div className="flex justify-around">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          const isActive = location.pathname === item.path
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                isActive
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-500'
+              }`}
+            >
+              <Icon className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">{item.label}</span>
+            </Link>
+          )
+        })}
       </div>
     </nav>
   )
@@ -56,9 +56,9 @@ function Navigation() {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <MobileHeader />
+        <main className="flex-1 overflow-y-auto pb-20">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/test-control" element={<TestControl />} />
@@ -67,6 +67,7 @@ function App() {
             <Route path="/settings" element={<TestSettings />} />
           </Routes>
         </main>
+        <BottomNavigation />
       </div>
     </Router>
   )
