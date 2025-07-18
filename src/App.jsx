@@ -9,9 +9,16 @@ import TestHistory from './pages/TestHistory'
 
 function MobileHeader() {
   return (
-    <header className="bg-blue-600 text-white px-4 py-3 flex items-center justify-center">
-      <Bluetooth className="w-6 h-6 mr-2" />
-      <h1 className="text-lg font-semibold">智能锁蓝牙测试</h1>
+    <header className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-6 py-4 shadow-xl">
+      <div className="flex items-center justify-center space-x-3">
+        <div className="p-2 bg-blue-500/20 rounded-xl backdrop-blur-sm">
+          <Bluetooth className="w-6 h-6 text-blue-400" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">智能锁测试</h1>
+          <p className="text-slate-300 text-xs font-medium">蓝牙耐久性检测</p>
+        </div>
+      </div>
     </header>
   )
 }
@@ -20,7 +27,7 @@ function BottomNavigation() {
   const location = useLocation()
   
   const navItems = [
-    { path: '/', icon: Home, label: '仪表板' },
+    { path: '/', icon: Home, label: '概览' },
     { path: '/test-control', icon: Play, label: '测试' },
     { path: '/test-results', icon: BarChart3, label: '结果' },
     { path: '/test-history', icon: Database, label: '历史' },
@@ -28,7 +35,7 @@ function BottomNavigation() {
   ]
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/50 px-2 py-2 shadow-2xl">
       <div className="flex justify-around">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -37,14 +44,19 @@ function BottomNavigation() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center py-3 px-4 rounded-2xl transition-all duration-300 transform ${
                 isActive
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-500'
+                  ? 'text-blue-600 bg-blue-50 scale-105 shadow-lg'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:scale-102'
               }`}
             >
-              <Icon className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">{item.label}</span>
+              {isActive && (
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+              )}
+              <Icon className={`w-5 h-5 mb-1 transition-transform duration-200 ${
+                isActive ? 'scale-110' : ''
+              }`} />
+              <span className="text-xs font-semibold tracking-wide">{item.label}</span>
             </Link>
           )
         })}
@@ -55,17 +67,19 @@ function BottomNavigation() {
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+    <Router basename="/smart-lock-endurance-test">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col">
         <MobileHeader />
-        <main className="flex-1 overflow-y-auto pb-20">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/test-control" element={<TestControl />} />
-            <Route path="/test-results" element={<TestResults />} />
-            <Route path="/test-history" element={<TestHistory />} />
-            <Route path="/settings" element={<TestSettings />} />
-          </Routes>
+        <main className="flex-1 overflow-y-auto pb-24 px-1">
+          <div className="max-w-md mx-auto">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/test-control" element={<TestControl />} />
+              <Route path="/test-results" element={<TestResults />} />
+              <Route path="/test-history" element={<TestHistory />} />
+              <Route path="/settings" element={<TestSettings />} />
+            </Routes>
+          </div>
         </main>
         <BottomNavigation />
       </div>

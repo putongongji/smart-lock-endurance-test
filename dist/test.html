@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>网络连接测试</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #4CAF50;
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 网络连接成功！</h1>
+        <div class="success">✅ 如果您能看到这个页面，说明局域网连接正常</div>
+        <div class="info">
+            <p><strong>服务器信息：</strong></p>
+            <p>IP: 172.16.20.116</p>
+            <p>端口: 3003</p>
+            <p>时间: <span id="time"></span></p>
+        </div>
+        <p>现在您可以访问主应用：</p>
+        <a href="/smart-lock-endurance-test/" style="color: #FFD700; text-decoration: none; font-size: 1.2em;">📱 打开智能锁测试应用</a>
+    </div>
+    
+    <script>
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleString('zh-CN');
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

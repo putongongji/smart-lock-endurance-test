@@ -6,8 +6,8 @@ function BottomNavigation() {
   const location = useLocation()
   
   const navItems = [
-    { path: '/', icon: BarChart3, label: '仪表板' },
-    { path: '/test-control', icon: Play, label: '测试' },
+    { path: '/', icon: BarChart3, label: '概览' },
+    { path: '/test-control', icon: Play, label: '蓝牙测试' },
     { path: '/test-results', icon: FileText, label: '结果' },
     { path: '/test-history', icon: History, label: '历史' },
     { path: '/test-settings', icon: Settings, label: '设置' }

@@ -66,45 +66,44 @@ const TestResults = () => {
   const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
 
   const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }) => (
-    <div className="bg-white rounded-lg p-3 shadow-sm border">
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-xs font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-lg font-bold text-gray-900">{value}</p>
+          <p className="text-xs font-semibold text-slate-600 mb-2">{title}</p>
+          <p className="text-xl font-bold text-slate-900">{value}</p>
           {change && (
-            <div className={`flex items-center mt-1 text-xs ${
-              change > 0 ? 'text-red-600' : 'text-green-600'
+            <div className={`flex items-center mt-2 text-xs font-medium ${
+              change > 0 ? 'text-gray-600' : 'text-green-600'
             }`}>
               {change > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
               {Math.abs(change)}%
             </div>
           )}
         </div>
-        <div className={`p-2 rounded-lg ${
-          color === 'blue' ? 'bg-blue-100' :
-          color === 'green' ? 'bg-green-100' :
-          color === 'yellow' ? 'bg-yellow-100' : 'bg-red-100'
+        <div className={`p-3 rounded-2xl shadow-md ${
+          color === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
+          color === 'green' ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' :
+          color === 'yellow' ? 'bg-gradient-to-br from-amber-500 to-amber-600' : 'bg-gradient-to-br from-red-500 to-red-600'
         }`}>
-          <Icon className={`w-4 h-4 ${
-            color === 'blue' ? 'text-blue-600' :
-            color === 'green' ? 'text-green-600' :
-            color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
-          }`} />
+          <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
     </div>
   )
 
   return (
-    <div className="p-4 pb-20 bg-gray-50 min-h-screen">
+    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* 页面标题和筛选器 */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-gray-900 mb-3">测试结果分析</h1>
+      <div className="mb-6">
+        <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-3xl p-6 mb-4 shadow-lg">
+          <h1 className="text-2xl font-bold text-white mb-2">测试结果分析</h1>
+          <p className="text-blue-100 text-sm">实时监控测试数据与性能指标</p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <select 
             value={selectedTest} 
             onChange={(e) => setSelectedTest(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
           >
             <option value="latest">最新测试</option>
             <option value="test-001">测试-001</option>
@@ -113,7 +112,7 @@ const TestResults = () => {
           <select 
             value={timeRange} 
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
           >
             <option value="1h">最近1小时</option>
             <option value="6h">最近6小时</option>
@@ -154,17 +153,16 @@ const TestResults = () => {
           />
         </div>
 
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6 mb-6">
           {/* 性能趋势图 */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">响应时间趋势</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              <Clock className="w-5 h-5 mr-2 text-gray-600" />
+              响应时间趋势
+            </h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={testData.performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis label={{ value: '响应时间 (ms)', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
                   <Line 
                     type="monotone" 
                     dataKey="responseTime" 
@@ -178,15 +176,14 @@ const TestResults = () => {
           </div>
 
           {/* 成功率趋势 */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">成功率趋势</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+              成功率趋势
+            </h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={testData.performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis domain={[80, 100]} label={{ value: '成功率 (%)', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
                   <Line 
                     type="monotone" 
                     dataKey="successRate" 
@@ -200,10 +197,13 @@ const TestResults = () => {
           </div>
         </div>
 
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6 mb-6">
           {/* 故障类型分析 */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">故障类型分析</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2 text-blue-600" />
+              故障类型分析
+            </h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -211,8 +211,6 @@ const TestResults = () => {
                     data={testData.failureAnalysis}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name} ${percentage}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="count"
@@ -221,22 +219,20 @@ const TestResults = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* 测试频率分布 */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">测试频率分布</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+              <Zap className="w-5 h-5 mr-2 text-gray-600" />
+              测试频率分布
+            </h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={testData.performanceData.slice(-12)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis label={{ value: '测试次数', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
                   <Bar dataKey="attempts" fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
@@ -245,39 +241,42 @@ const TestResults = () => {
         </div>
 
         {/* 组件健康状态 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border mb-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">组件健康状态</h3>
-          <div className="space-y-3">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 mb-6">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+            组件健康状态
+          </h3>
+          <div className="space-y-4">
             {testData.componentHealth.map((component, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">{component.name}</span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              <div key={index} className="bg-white/70 border border-white/30 rounded-2xl p-5 backdrop-blur-sm shadow-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-bold text-slate-900">{component.name}</span>
+                  <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-xl shadow-sm ${
                     component.status === 'good' ? 'bg-green-100 text-green-800' :
-                    component.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
+          component.status === 'warning' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-800'
                   }`}>
                     {component.status === 'good' ? '良好' : 
                      component.status === 'warning' ? '警告' : '严重'}
                   </span>
                 </div>
-                <div className="flex items-center mb-2">
-                  <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                <div className="flex items-center mb-3">
+                  <div className="flex-1 bg-gray-200 rounded-full h-3 mr-4 shadow-inner">
                     <div 
-                      className={`h-2 rounded-full ${
-                        component.health >= 90 ? 'bg-green-500' :
-                        component.health >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                      className={`h-3 rounded-full shadow-sm ${
+                        component.health >= 90 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
+                        component.health >= 70 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-red-400 to-red-500'
                       }`}
                       style={{ width: `${component.health}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-medium">{component.health}%</span>
+                  <span className="text-sm font-bold text-slate-900">{component.health}%</span>
                 </div>
-                <div className="flex justify-between text-xs text-gray-600">
+                <div className="flex justify-between text-xs font-medium text-slate-600">
                   <span>维护: {component.lastMaintenance}</span>
-                  <span className={`font-medium ${
-                    component.health < 70 ? 'text-red-600' :
-                    component.health < 85 ? 'text-yellow-600' : 'text-green-600'
+                  <span className={`font-bold ${
+                    component.health < 70 ? 'text-gray-600' :
+          component.health < 85 ? 'text-blue-600' : 'text-green-600'
                   }`}>
                     {component.health < 70 ? '立即维护' :
                      component.health < 85 ? '计划维护' : '正常'}
@@ -289,11 +288,14 @@ const TestResults = () => {
         </div>
 
         {/* 测试总结 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">测试总结与建议</h3>
-          <div className="space-y-3">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center">
+            <AlertTriangle className="w-5 h-5 mr-2 text-blue-600" />
+            测试总结与建议
+          </h3>
+          <div className="space-y-4">
             <div className="flex items-start space-x-3">
-              <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-gray-900">性能下降趋势</p>
                 <p className="text-xs text-gray-600">在测试进行到2000次后，响应时间开始显著增加，建议检查电机和机械结构。</p>
@@ -307,7 +309,7 @@ const TestResults = () => {
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-gray-900">维护建议</p>
                 <p className="text-xs text-gray-600">建议每1500次使用后进行预防性维护，重点关注机械结构润滑。</p>
@@ -315,6 +317,9 @@ const TestResults = () => {
             </div>
           </div>
         </div>
+        
+        {/* 底部间距，为底部导航栏留出空间 */}
+        <div className="h-20"></div>
     </div>
   )
 }

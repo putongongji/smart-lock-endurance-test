@@ -5,8 +5,10 @@ export default defineConfig({
   plugins: [react()],
   base: '/smart-lock-endurance-test/',
   server: {
-    port: 3003,
-    host: true
+    port: 8080,
+    host: '0.0.0.0',
+    strictPort: true,
+    cors: true
   },
   build: {
     outDir: 'dist'

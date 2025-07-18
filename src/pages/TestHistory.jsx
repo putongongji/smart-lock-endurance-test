@@ -7,7 +7,7 @@ const TestHistory = () => {
   const [filterDateRange, setFilterDateRange] = useState('all') // all, today, week, month
   const [sortBy, setSortBy] = useState('date') // date, duration, attempts, success_rate
   const [sortOrder, setSortOrder] = useState('desc') // asc, desc
-  const [selectedTests, setSelectedTests] = useState([])
+
   const [testHistory, setTestHistory] = useState([])
 
   // 生成模拟历史数据
@@ -121,27 +121,10 @@ const TestHistory = () => {
       }
     })
 
-  const handleSelectTest = (testId) => {
-    setSelectedTests(prev => 
-      prev.includes(testId) 
-        ? prev.filter(id => id !== testId)
-        : [...prev, testId]
-    )
-  }
-
-  const handleSelectAll = () => {
-    if (selectedTests.length === filteredAndSortedTests.length) {
-      setSelectedTests([])
-    } else {
-      setSelectedTests(filteredAndSortedTests.map(test => test.id))
-    }
-  }
-
-  const handleExportSelected = () => {
-    const selectedData = filteredAndSortedTests.filter(test => selectedTests.includes(test.id))
+  const handleExportAll = () => {
     const csvContent = [
       ['测试ID', '测试名称', '锁型号', '测试类型', '开始时间', '结束时间', '持续时间(分钟)', '总次数', '成功次数', '失败次数', '成功率(%)', '平均响应时间(ms)', '状态', '备注'].join(','),
-      ...selectedData.map(test => [
+      ...filteredAndSortedTests.map(test => [
         test.id,
         test.name,
         test.lockModel,
@@ -166,19 +149,18 @@ const TestHistory = () => {
     link.click()
   }
 
-  const handleDeleteSelected = () => {
-    if (window.confirm(`确定要删除选中的 ${selectedTests.length} 个测试记录吗？`)) {
-      setTestHistory(prev => prev.filter(test => !selectedTests.includes(test.id)))
-      setSelectedTests([])
+  const handleDeleteTest = (testId) => {
+    if (window.confirm('确定要删除这个测试记录吗？')) {
+      setTestHistory(prev => prev.filter(test => test.id !== testId))
     }
   }
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       completed: { label: '已完成', color: 'bg-green-100 text-green-800' },
-      failed: { label: '已失败', color: 'bg-red-100 text-red-800' },
-      running: { label: '运行中', color: 'bg-blue-100 text-blue-800' },
-      paused: { label: '已暂停', color: 'bg-yellow-100 text-yellow-800' }
+    failed: { label: '已失败', color: 'bg-gray-100 text-gray-800' },
+    running: { label: '运行中', color: 'bg-blue-100 text-blue-800' },
+    paused: { label: '已暂停', color: 'bg-blue-100 text-blue-800' }
     }
     
     const config = statusConfig[status] || statusConfig.completed
@@ -190,41 +172,35 @@ const TestHistory = () => {
   }
 
   return (
-    <div className="p-4 pb-20 bg-gray-50 min-h-screen">
+    <div className="p-4 pb-20 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* 页面标题 */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-gray-900 mb-3">测试历史</h1>
-        {selectedTests.length > 0 && (
-          <div className="flex space-x-2">
-            <button 
-              onClick={handleExportSelected}
-              className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
-            >
-              <Download className="w-4 h-4 mr-1" />
-              导出 ({selectedTests.length})
-            </button>
-            <button 
-              onClick={handleDeleteSelected}
-              className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              删除
-            </button>
-          </div>
-        )}
+      <div className="mb-6">
+        <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-3xl p-6 mb-4 shadow-lg">
+          <h1 className="text-2xl font-bold text-white mb-2">测试历史</h1>
+          <p className="text-blue-100 text-sm">查看和管理所有测试记录</p>
+        </div>
+        <div className="flex space-x-2">
+          <button 
+            onClick={handleExportAll}
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-3 rounded-2xl text-sm font-semibold flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            导出全部
+          </button>
+        </div>
       </div>
 
         {/* 搜索和过滤 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border mb-4">
-          <div className="space-y-3">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 mb-6">
+          <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="搜索测试..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               />
             </div>
             
@@ -232,7 +208,7 @@ const TestHistory = () => {
               <select 
                 value={filterStatus} 
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               >
                 <option value="all">所有状态</option>
                 <option value="completed">已完成</option>
@@ -244,7 +220,7 @@ const TestHistory = () => {
               <select 
                 value={filterDateRange} 
                 onChange={(e) => setFilterDateRange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               >
                 <option value="all">所有时间</option>
                 <option value="today">今天</option>
@@ -257,7 +233,7 @@ const TestHistory = () => {
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               >
                 <option value="date">按日期排序</option>
                 <option value="duration">按时长排序</option>
@@ -268,7 +244,7 @@ const TestHistory = () => {
               <select 
                 value={sortOrder} 
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium bg-white/50 backdrop-blur-sm focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200"
               >
                 <option value="desc">降序</option>
                 <option value="asc">升序</option>
@@ -277,139 +253,119 @@ const TestHistory = () => {
           </div>
         </div>
 
-        {/* 全选控制 */}
-        {filteredAndSortedTests.length > 0 && (
-          <div className="bg-white rounded-lg p-3 shadow-sm border mb-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={selectedTests.length === filteredAndSortedTests.length}
-                onChange={handleSelectAll}
-                className="rounded border-gray-300 mr-2"
-              />
-              <span className="text-sm text-gray-700">
-                {selectedTests.length === filteredAndSortedTests.length ? '取消全选' : '全选'}
-                ({filteredAndSortedTests.length} 项)
-              </span>
-            </label>
-          </div>
-        )}
+
 
         {/* 测试列表 */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-4 mb-6">
           {filteredAndSortedTests.map((test) => (
-            <div key={test.id} className={`bg-white rounded-lg p-4 shadow-sm border ${
-              selectedTests.includes(test.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-            }`}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedTests.includes(test.id)}
-                    onChange={() => handleSelectTest(test.id)}
-                    className="rounded border-gray-300 mt-1"
-                  />
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">{test.name}</h3>
-                    <p className="text-xs text-gray-500">{test.id}</p>
-                  </div>
+            <div key={test.id} className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">{test.name}</h3>
+                  <p className="text-sm text-slate-500 font-medium">{test.id}</p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   {getStatusBadge(test.status)}
-                  <div className="flex space-x-1">
-                    <button className="text-blue-600 hover:text-blue-900">
+                  <div className="flex space-x-2">
+                    <button className="p-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200">
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button 
+                      onClick={() => handleDeleteTest(test.id)}
+                      className="p-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <p className="text-xs text-gray-500">配置信息</p>
-                  <p className="text-sm text-gray-900">{test.lockModel}</p>
-                  <p className="text-xs text-gray-600">{test.testType}</p>
+              <div className="grid grid-cols-2 gap-6 mb-4">
+                <div className="bg-white/50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-500 mb-2">配置信息</p>
+                  <p className="text-sm font-bold text-slate-900">{test.lockModel}</p>
+                  <p className="text-xs text-slate-600 font-medium">{test.testType}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">测试时间</p>
-                  <div className="text-sm text-gray-900 flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
+                <div className="bg-white/50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-500 mb-2">测试时间</p>
+                  <div className="text-sm font-bold text-slate-900 flex items-center mb-1">
+                    <Calendar className="w-4 h-4 mr-2 text-gray-600" />
                     {test.startTime.toLocaleDateString()}
                   </div>
-                  <div className="text-xs text-gray-600 flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
+                  <div className="text-xs text-slate-600 font-medium flex items-center">
+                    <Clock className="w-4 h-4 mr-2 text-green-600" />
                     {Math.floor(test.duration / 60)}h {test.duration % 60}m
                   </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-xs text-gray-500">总次数</p>
-                  <p className="text-sm font-medium text-gray-900">{test.totalAttempts.toLocaleString()}</p>
+              <div className="grid grid-cols-3 gap-3 text-center mb-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">总次数</p>
+                  <p className="text-sm font-bold text-gray-700">{test.totalAttempts.toLocaleString()}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">成功率</p>
-                  <p className="text-sm font-medium text-gray-900">{test.successRate}%</p>
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">成功率</p>
+                  <p className="text-sm font-bold text-green-700">{test.successRate}%</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">响应时间</p>
-                  <p className="text-sm font-medium text-gray-900">{test.averageResponseTime}ms</p>
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">响应时间</p>
+                  <p className="text-sm font-bold text-gray-700">{test.averageResponseTime}ms</p>
                 </div>
               </div>
               
               {test.failureReason && (
-                <div className="mt-3 p-2 bg-red-50 rounded border border-red-200">
-                  <p className="text-xs text-red-600">失败原因: {test.failureReason}</p>
+                <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-200/50">
+                  <p className="text-xs font-medium text-gray-700">失败原因: {test.failureReason}</p>
                 </div>
               )}
               
               {test.notes && (
-                <div className="mt-2">
-                  <p className="text-xs text-gray-600">{test.notes}</p>
+                <div className="mt-3 p-3 bg-slate-50/80 rounded-xl">
+                  <p className="text-xs font-medium text-slate-600">{test.notes}</p>
                 </div>
               )}
             </div>
           ))}
           
           {filteredAndSortedTests.length === 0 && (
-            <div className="bg-white rounded-lg p-8 shadow-sm border text-center">
-              <div className="text-gray-500">没有找到匹配的测试记录</div>
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-12 shadow-lg border border-white/20 text-center">
+              <div className="text-slate-500 font-medium text-lg">没有找到匹配的测试记录</div>
             </div>
           )}
         </div>
 
         {/* 底部统计 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border">
-          <h3 className="text-base font-semibold mb-3">统计信息</h3>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+          <h3 className="text-lg font-bold mb-4 text-slate-900">统计信息</h3>
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-xl font-bold text-gray-900">{testHistory.length}</div>
-              <div className="text-xs text-gray-500">总测试数</div>
+            <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
+              <div className="text-2xl font-bold text-slate-900">{testHistory.length}</div>
+              <div className="text-sm font-medium text-slate-600">总测试数</div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-xl font-bold text-green-600">
+            <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl">
+              <div className="text-2xl font-bold text-green-700">
                 {testHistory.filter(test => test.status === 'completed').length}
               </div>
-              <div className="text-xs text-gray-500">已完成</div>
+              <div className="text-sm font-medium text-slate-600">已完成</div>
             </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
-              <div className="text-xl font-bold text-red-600">
+            <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl">
+              <div className="text-2xl font-bold text-gray-700">
                 {testHistory.filter(test => test.status === 'failed').length}
               </div>
-              <div className="text-xs text-gray-500">已失败</div>
+              <div className="text-sm font-medium text-slate-600">已失败</div>
             </div>
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-xl font-bold text-blue-600">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+              <div className="text-2xl font-bold text-blue-700">
                 {testHistory.filter(test => test.status === 'running').length}
               </div>
-              <div className="text-xs text-gray-500">运行中</div>
+              <div className="text-sm font-medium text-slate-600">运行中</div>
             </div>
           </div>
         </div>
+        
+        {/* 底部间距 */}
+        <div className="h-20"></div>
       </div>
   )
 }
