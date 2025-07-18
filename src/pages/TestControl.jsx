@@ -441,25 +441,25 @@ const TestControl = () => {
  
        {/* 配置参数区域 */}
        {testStatus === 'stopped' && (
-         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
            <div className="flex items-center justify-between mb-6">
              <div>
                <h3 className="text-lg font-semibold text-gray-900">配置参数</h3>
                <p className="text-gray-600 font-medium">设置测试参数</p>
              </div>
-             <div className="p-3 bg-gray-100 rounded-xl">
+             <div className="p-3 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-inner">
                <Zap className="w-6 h-6 text-gray-600" />
              </div>
            </div>
            
-           <div className="grid grid-cols-2 gap-4 mb-6">
+           <div className="grid grid-cols-2 gap-4">
              <div>
                <label className="block text-sm font-medium text-gray-700 mb-2">测试次数</label>
                <input
                  type="number"
                  value={testConfig.targetCount}
                  onChange={(e) => setTestConfig({...testConfig, targetCount: parseInt(e.target.value) || 0})}
-                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
+                 className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 font-medium shadow-sm hover:shadow-md transition-all duration-200"
                  min="1"
                  placeholder="输入测试次数"
                />
@@ -471,25 +471,17 @@ const TestControl = () => {
                  type="number"
                  value={testConfig.interval}
                  onChange={(e) => setTestConfig({...testConfig, interval: parseInt(e.target.value) || 1})}
-                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
+                 className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 font-medium shadow-sm hover:shadow-md transition-all duration-200"
                  min="1"
                  placeholder="输入间隔时间"
                />
              </div>
            </div>
-           
-           <button
-             onClick={startTest}
-             className="w-full flex items-center justify-center px-6 py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 font-medium shadow-sm"
-           >
-             <Play className="w-5 h-5 mr-2" />
-             开始测试
-           </button>
          </div>
        )}
         
       {/* 测试状态卡片 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className={`p-3 rounded-2xl ${
@@ -524,14 +516,14 @@ const TestControl = () => {
         
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
               <div className="text-center">
                 <div className="text-3xl font-black text-gray-900 mb-1">{currentProgress.count}</div>
         <div className="text-xs text-gray-600 font-bold uppercase tracking-wider">已完成</div>
         <div className="text-xs text-gray-500 mt-1">/ {testConfig.targetCount}</div>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
               <div className="text-center">
                 <div className={`text-3xl font-black mb-1 ${
                   getSuccessRate() >= 95 ? 'text-green-600' :
@@ -542,7 +534,7 @@ const TestControl = () => {
                 <div className="text-xs text-gray-600 font-bold uppercase tracking-wider">成功率</div>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
               <div className="text-center">
                 <div className="text-3xl font-black text-gray-900 mb-1">
                   {currentProgress.avgResponseTime.toFixed(0)}
@@ -551,7 +543,7 @@ const TestControl = () => {
         <div className="text-xs text-gray-500 mt-1">毫秒</div>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
               <div className="text-center">
                 <div className="text-3xl font-black text-gray-900 mb-1">
                   {testStatus === 'running' ? getEstimatedTimeRemaining() : '-'}
@@ -563,7 +555,7 @@ const TestControl = () => {
           </div>
           
           {testStatus !== 'stopped' && (
-            <div className="bg-white/50 rounded-xl p-4 border border-white/30">
+            <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-700 font-bold">下次测试:</span>
                 <div className="flex items-center">
@@ -576,14 +568,14 @@ const TestControl = () => {
           
           {/* 进度条 */}
           <div className="mt-6">
-            <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-4 border border-slate-200/50">
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-bold text-slate-700">总体进度</span>
                 <span className="text-lg font-black text-slate-900">
                   {getProgressPercentage().toFixed(1)}%
                 </span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-3 shadow-inner">
+              <div className="w-full bg-slate-200/60 backdrop-blur-sm rounded-full h-3 shadow-inner">
                 <div 
                   className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 shadow-lg" 
                   style={{ width: `${getProgressPercentage()}%` }}
@@ -601,7 +593,7 @@ const TestControl = () => {
 
 
       {/* 实时日志 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-slate-500/10 rounded-2xl">
@@ -658,47 +650,53 @@ const TestControl = () => {
       <div className="h-20"></div>
       
       {/* 固定在底部的测试控制按钮 */}
-      {(testStatus === 'running' || testStatus === 'paused') && (
-        <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
-          <div className="max-w-md mx-auto">
-            {testStatus === 'running' ? (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={pauseTest}
-                  className="flex items-center justify-center px-6 py-4 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-all duration-200 font-medium shadow-sm"
-                >
-                  <Pause className="w-5 h-5 mr-2" />
-                  暂停
-                </button>
-                <button
-                  onClick={stopTest}
-                  className="flex items-center justify-center px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 font-medium shadow-sm"
-                >
-                  <Square className="w-5 h-5 mr-2" />
-                  停止
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={resumeTest}
-                  className="flex items-center justify-center px-6 py-4 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 font-medium shadow-sm"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  继续
-                </button>
-                <button
-                  onClick={stopTest}
-                  className="flex items-center justify-center px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 font-medium shadow-sm"
-                >
-                  <Square className="w-5 h-5 mr-2" />
-                  停止
-                </button>
-              </div>
-            )}
-          </div>
+      <div className="fixed bottom-20 left-4 right-4 z-10">
+        <div className="max-w-sm mx-auto bg-white/70 backdrop-blur-sm border border-white/20 p-4 rounded-3xl shadow-lg">
+          {testStatus === 'stopped' ? (
+            <button
+              onClick={startTest}
+              className="w-full flex items-center justify-center px-6 py-4 bg-blue-500/10 backdrop-blur-sm border border-blue-200/30 hover:bg-blue-500/20 text-blue-600 rounded-2xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md active:scale-95"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              开始测试
+            </button>
+          ) : testStatus === 'running' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={pauseTest}
+                className="flex items-center justify-center px-6 py-4 bg-blue-500/10 backdrop-blur-sm border border-blue-200/30 hover:bg-blue-500/20 text-blue-600 rounded-2xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md active:scale-95"
+              >
+                <Pause className="w-5 h-5 mr-2" />
+                暂停
+              </button>
+              <button
+                onClick={stopTest}
+                className="flex items-center justify-center px-6 py-4 bg-gray-500/10 backdrop-blur-sm border border-gray-200/30 hover:bg-gray-500/20 text-gray-600 rounded-2xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md active:scale-95"
+              >
+                <Square className="w-5 h-5 mr-2" />
+                停止
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={resumeTest}
+                className="flex items-center justify-center px-6 py-4 bg-green-500/10 backdrop-blur-sm border border-green-200/30 hover:bg-green-500/20 text-green-600 rounded-2xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md active:scale-95"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                继续
+              </button>
+              <button
+                onClick={stopTest}
+                className="flex items-center justify-center px-6 py-4 bg-gray-500/10 backdrop-blur-sm border border-gray-200/30 hover:bg-gray-500/20 text-gray-600 rounded-2xl transition-all duration-300 font-semibold shadow-sm hover:shadow-md active:scale-95"
+              >
+                <Square className="w-5 h-5 mr-2" />
+                停止
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

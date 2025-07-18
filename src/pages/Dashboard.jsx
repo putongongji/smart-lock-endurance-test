@@ -43,9 +43,9 @@ const Dashboard = () => {
   }, [testStatus])
 
   const StatusCard = ({ title, value, icon: Icon, subtitle }) => (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
       <div className="flex flex-col items-center text-center space-y-3">
-        <div className="p-2 rounded-lg bg-gray-50">
+        <div className="p-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-inner">
           <Icon className="w-5 h-5 text-gray-600" />
         </div>
         <div>
@@ -58,10 +58,10 @@ const Dashboard = () => {
   )
 
   const ConnectionCard = () => (
-    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-base font-semibold text-gray-900">设备状态</h3>
-        <div className={`w-3 h-3 rounded-full ${
+        <div className={`w-3 h-3 rounded-full shadow-lg ${
           bluetoothStatus === 'connected' ? 'bg-green-500' :
         bluetoothStatus === 'connecting' ? 'bg-blue-500' : 'bg-gray-500'
         }`}></div>
@@ -101,7 +101,7 @@ const Dashboard = () => {
   return (
     <div className="p-4 space-y-5">
       {/* 测试状态指示器 */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className={`w-4 h-4 rounded-full mr-4 ${
@@ -154,7 +154,7 @@ const Dashboard = () => {
       </div>
 
       {/* 简化的响应时间图表 */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-gray-900">蓝牙响应时间</h3>
           <span className="text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">
@@ -181,7 +181,7 @@ const Dashboard = () => {
       </div>
 
       {/* 当前测试信息 */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
         <h3 className="text-base font-semibold text-gray-900 mb-5">当前测试信息</h3>
         <div className="grid grid-cols-3 gap-6">
           <div className="text-center">

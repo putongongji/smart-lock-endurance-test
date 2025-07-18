@@ -14,7 +14,7 @@ function BottomNavigation() {
   ]
 
   return (
-    <div className="bg-white border-t border-gray-200">
+    <div className="bg-white/70 backdrop-blur-sm border-t border-white/20 shadow-lg">
       <div className="flex">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -24,11 +24,11 @@ function BottomNavigation() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex-1 flex flex-col items-center py-2 px-1 ${
+              className={`flex-1 flex flex-col items-center py-3 px-1 ${
                 isActive 
-                  ? 'text-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+                  ? 'text-blue-600 bg-blue-50/50 backdrop-blur-sm border-t-2 border-blue-500' 
+                  : 'text-gray-600 hover:text-gray-900 border-t-2 border-transparent'
+              } transition-all duration-200`}
             >
               <Icon className={`w-5 h-5 mb-1 ${
                 isActive ? 'text-blue-600' : 'text-gray-600'

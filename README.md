@@ -2,7 +2,9 @@
 
 ## 快速开始
 
-访问地址：http://localhost:8080/smart-lock-endurance-test/
+**在线访问地址：** https://putongongji.github.io/smart-lock-endurance-test/
+
+**本地开发地址：** http://localhost:5173/
 
 一个专业的智能锁耐久性测试系统，用于执行长时间或高频率的开锁测试，验证智能锁组件的耐用性和性能表现。系统采用现代化的Web技术栈，提供直观的用户界面和强大的数据分析功能。
 
@@ -128,7 +130,7 @@ npm install
 npm run dev
 
 # 访问应用
-open http://localhost:8080/smart-lock-endurance-test/
+open http://localhost:5173/
 ```
 
 ### 构建部署

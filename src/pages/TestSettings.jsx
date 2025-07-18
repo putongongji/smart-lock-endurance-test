@@ -197,7 +197,7 @@ const TestSettings = () => {
             <p className="text-xs text-slate-500 mt-2 font-medium">超过此时间将被标记为慢响应</p>
           </div>
           
-          <div className="flex items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="flex items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
             <input 
               type="checkbox" 
               id="autoReconnect"
@@ -224,7 +224,7 @@ const TestSettings = () => {
           </div>
         </div>
         <div className="space-y-6">
-          <div className="flex items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="flex items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
             <input 
               type="checkbox" 
               id="enableFailureAlerts"
@@ -268,7 +268,7 @@ const TestSettings = () => {
             <p className="text-xs text-slate-500 mt-2 font-medium">响应时间超过此值时触发警报</p>
           </div>
           
-          <div className="flex items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="flex items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
             <input 
               type="checkbox" 
               id="soundAlerts"
@@ -295,7 +295,7 @@ const TestSettings = () => {
           </div>
         </div>
         <div className="space-y-6">
-          <div className="flex items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="flex items-center p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-md hover:shadow-lg transition-all duration-200">
             <input 
               type="checkbox" 
               id="autoSaveResults"
