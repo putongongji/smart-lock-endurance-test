@@ -1,7 +1,7 @@
 {
-  "name": "smart-lock-endurance-test",
+  "name": "bagua-furnace",
   "version": "1.0.0",
-  "description": "智能锁测损功能测试系统",
+  "description": "八卦炉 - 移动端蓝牙智能锁开锁测试工具",
   "main": "index.js",
   "type": "module",
   "scripts": {

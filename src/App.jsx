@@ -1,22 +1,42 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Play, BarChart3, Settings, Database, Home, Bluetooth } from 'lucide-react'
+import { Play, BarChart3, Settings as SettingsIcon, Database, Home, Bluetooth } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import TestControl from './pages/TestControl'
 import TestResults from './pages/TestResults'
-import TestSettings from './pages/TestSettings'
+import Settings from './pages/Settings'
 import TestHistory from './pages/TestHistory'
+import { AlertContainer } from './components/Alert'
+import DeviceSelector from './components/DeviceSelector'
+import { useBluetoothState, useUIState } from './hooks/useAppState'
+import BluetoothService from './services/BluetoothService.js'
+import StateService from './services/StateService.js'
+import TestService from './services/TestService.js'
 
 function MobileHeader() {
+  const { isConnected, deviceName } = useBluetoothState()
+  
   return (
-    <header className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-6 py-4 shadow-xl">
-      <div className="flex items-center justify-center space-x-3">
-        <div className="p-2 bg-blue-500/20 rounded-xl backdrop-blur-sm">
-          <Bluetooth className="w-6 h-6 text-blue-400" />
+    <header className="bg-gradient-to-r from-blue-50 to-indigo-50 text-slate-800 px-6 py-4 shadow-lg border-b border-blue-100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-100 rounded-xl">
+            <Bluetooth className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">八卦炉</h1>
+            <p className="text-slate-600 text-xs font-medium">蓝牙智能锁开锁测试</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">智能锁测试</h1>
-          <p className="text-slate-300 text-xs font-medium">蓝牙耐久性检测</p>
+        
+        {/* 连接状态指示器 */}
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${
+            isConnected ? 'bg-green-400' : 'bg-red-400'
+          }`}></div>
+          <span className="text-xs text-slate-600">
+            {isConnected ? (deviceName || '已连接') : '未连接'}
+          </span>
         </div>
       </div>
     </header>
@@ -31,7 +51,7 @@ function BottomNavigation() {
     { path: '/test-control', icon: Play, label: '测试' },
     { path: '/test-results', icon: BarChart3, label: '结果' },
     { path: '/test-history', icon: Database, label: '历史' },
-    { path: '/settings', icon: Settings, label: '设置' }
+    { path: '/settings', icon: SettingsIcon, label: '设置' }
   ]
   
   return (
@@ -66,6 +86,32 @@ function BottomNavigation() {
 }
 
 function App() {
+  // 初始化服务
+  useEffect(() => {
+    console.log('App.jsx 开始初始化服务...');
+    
+    // 初始化蓝牙服务
+    console.log('初始化BluetoothService...');
+    BluetoothService.initialize()
+    
+    // 初始化状态服务（这会设置事件监听器）
+    console.log('初始化StateService...');
+    StateService.initialize()
+    
+    // 初始化测试服务
+    console.log('初始化TestService...');
+    TestService.initialize()
+    
+    console.log('所有服务初始化完成');
+    
+    return () => {
+      // 清理资源
+      BluetoothService.cleanup()
+      StateService.cleanup()
+      TestService.cleanup()
+    }
+  }, [])
+  
   return (
     <Router basename="/smart-lock-endurance-test">
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col">
@@ -77,11 +123,17 @@ function App() {
               <Route path="/test-control" element={<TestControl />} />
               <Route path="/test-results" element={<TestResults />} />
               <Route path="/test-history" element={<TestHistory />} />
-              <Route path="/settings" element={<TestSettings />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>
         </main>
         <BottomNavigation />
+        
+        {/* 全局警报容器 */}
+        <AlertContainer />
+        
+        {/* 设备选择器模态框 */}
+        <DeviceSelector />
       </div>
     </Router>
   )

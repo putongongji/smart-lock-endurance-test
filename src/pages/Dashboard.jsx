@@ -1,214 +1,223 @@
-import React, { useState, useEffect } from 'react'
-import { Play, Pause, Square, Clock, Hash, AlertTriangle, CheckCircle, Bluetooth, Wifi, Battery } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import React from 'react'
+import { Bluetooth, Battery, Wifi, Play, TrendingUp, Clock, CheckCircle, AlertCircle, Settings } from 'lucide-react'
+import { useConnectionSummary, useTestSummary, useBluetoothState, useUIState } from '../hooks/useAppState.js'
 
-const Dashboard = () => {
-  const [testStatus, setTestStatus] = useState('stopped') // stopped, running, paused
-  const [bluetoothStatus, setBluetoothStatus] = useState('connected') // connected, disconnected, connecting
-  const [lockBattery, setLockBattery] = useState(85)
-  const [currentTest, setCurrentTest] = useState(null)
-  const [realtimeData, setRealtimeData] = useState([])
-  const [stats, setStats] = useState({
-    totalTests: 0,
-    successfulUnlocks: 0,
-    failedUnlocks: 0,
-    currentDuration: 0,
-    averageResponseTime: 0,
-    signalStrength: -45 // dBm
-  })
-
-  // 模拟实时数据更新
-  useEffect(() => {
-    if (testStatus === 'running') {
-      const interval = setInterval(() => {
-        const newDataPoint = {
-          time: new Date().toLocaleTimeString(),
-          responseTime: Math.random() * 100 + 50,
-          success: Math.random() > 0.1 // 90% 成功率
-        }
-        setRealtimeData(prev => [...prev.slice(-19), newDataPoint])
-        
-        setStats(prev => ({
-          ...prev,
-          totalTests: prev.totalTests + 1,
-          successfulUnlocks: prev.successfulUnlocks + (newDataPoint.success ? 1 : 0),
-          failedUnlocks: prev.failedUnlocks + (newDataPoint.success ? 0 : 1),
-          currentDuration: prev.currentDuration + 1,
-          averageResponseTime: (prev.averageResponseTime + newDataPoint.responseTime) / 2
-        }))
-      }, 2000)
-      
-      return () => clearInterval(interval)
-    }
-  }, [testStatus])
-
-  const StatusCard = ({ title, value, icon: Icon, subtitle }) => (
-    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
-      <div className="flex flex-col items-center text-center space-y-3">
-        <div className="p-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-inner">
-          <Icon className="w-5 h-5 text-gray-600" />
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{title}</p>
-          <p className="text-lg font-bold text-gray-900 leading-tight">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-        </div>
-      </div>
-    </div>
-  )
-
-  const ConnectionCard = () => (
-    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-base font-semibold text-gray-900">设备状态</h3>
-        <div className={`w-3 h-3 rounded-full shadow-lg ${
-          bluetoothStatus === 'connected' ? 'bg-green-500' :
-        bluetoothStatus === 'connecting' ? 'bg-blue-500' : 'bg-gray-500'
-        }`}></div>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="flex justify-center mb-2">
-            <Bluetooth className="w-5 h-5 text-gray-600" />
-          </div>
-          <div className="text-xs text-gray-500 mb-1">蓝牙</div>
-          <div className={`text-sm font-medium ${
-            bluetoothStatus === 'connected' ? 'text-green-600' :
-        bluetoothStatus === 'connecting' ? 'text-blue-600' : 'text-gray-600'
-          }`}>
-            {bluetoothStatus === 'connected' ? '已连接' :
-             bluetoothStatus === 'connecting' ? '连接中' : '未连接'}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="flex justify-center mb-2">
-            <Wifi className="w-5 h-5 text-gray-600" />
-          </div>
-          <div className="text-xs text-gray-500 mb-1">信号强度</div>
-          <div className="text-sm font-medium text-gray-900">{stats.signalStrength} dBm</div>
-        </div>
-        <div className="text-center">
-          <div className="flex justify-center mb-2">
-            <Battery className="w-5 h-5 text-gray-600" />
-          </div>
-          <div className="text-xs text-gray-500 mb-1">电量</div>
-          <div className="text-sm font-medium text-gray-900">{lockBattery}%</div>
-        </div>
-      </div>
-    </div>
-  )
-
+function StatusCard({ title, value, icon: Icon, color = "blue", subtitle, onClick }) {
   return (
-    <div className="p-4 space-y-5">
-      {/* 测试状态指示器 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
+    <div 
+      className={`bg-white rounded-2xl p-5 shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 ${
+        onClick ? 'cursor-pointer hover:scale-105' : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-slate-600 text-sm font-medium mb-1">{title}</p>
+          <p className={`text-2xl font-bold text-${color}-600 mb-1`}>{value}</p>
+          {subtitle && <p className="text-slate-500 text-xs">{subtitle}</p>}
+        </div>
+        <div className={`p-3 bg-${color}-100 rounded-xl`}>
+          <Icon className={`w-6 h-6 text-${color}-600`} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ConnectionCard({ title, status, details, icon: Icon, onAction }) {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'connected': return 'green'
+      case 'disconnected': return 'red'
+      case 'connecting': return 'yellow'
+      default: return 'gray'
+    }
+  }
+  
+  const color = getStatusColor(status)
+  
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-lg border border-slate-100">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-slate-800">{title}</h3>
+        <div className={`p-2 bg-${color}-100 rounded-lg`}>
+          <Icon className={`w-5 h-5 text-${color}-600`} />
+        </div>
+      </div>
+      
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className={`w-4 h-4 rounded-full mr-4 ${
-              testStatus === 'running' ? 'bg-green-500' :
-        testStatus === 'paused' ? 'bg-blue-500' : 'bg-gray-400'
-            }`}></div>
-            <span className="text-sm font-semibold text-gray-900">
-              {testStatus === 'running' ? '测试运行中' : testStatus === 'paused' ? '测试已暂停' : '测试已停止'}
+          <span className="text-slate-600 text-sm">状态</span>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 bg-${color}-500 rounded-full ${status === 'connected' ? 'animate-pulse' : ''}`}></div>
+            <span className={`text-sm font-medium text-${color}-600 capitalize`}>
+              {status === 'connected' ? '已连接' : status === 'disconnected' ? '未连接' : '连接中'}
             </span>
           </div>
-          <div className={`px-4 py-2 rounded-lg text-xs font-medium ${
-            testStatus === 'running' ? 'bg-green-50 text-green-700' :
-        testStatus === 'paused' ? 'bg-blue-50 text-blue-700' :
-        'bg-gray-50 text-gray-700'
-          }`}>
-            {testStatus === 'running' && <Play className="w-4 h-4 inline mr-2" />}
-            {testStatus === 'paused' && <Pause className="w-4 h-4 inline mr-2" />}
-            {testStatus === 'stopped' && <Square className="w-4 h-4 inline mr-2" />}
-            {testStatus === 'running' ? '运行中' : testStatus === 'paused' ? '暂停' : '停止'}
+        </div>
+        
+        {details && Object.entries(details).map(([key, value]) => (
+          <div key={key} className="flex items-center justify-between">
+            <span className="text-slate-600 text-sm">{key}</span>
+            <span className="text-slate-800 text-sm font-medium">{value}</span>
           </div>
+        ))}
+        
+        {onAction && (
+          <button
+            onClick={onAction}
+            className={`w-full mt-3 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+              status === 'connected' 
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+          >
+            {status === 'connected' ? '断开连接' : '连接设备'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Dashboard() {
+  const connectionSummary = useConnectionSummary()
+  const testSummary = useTestSummary()
+  const { disconnectDevice } = useBluetoothState()
+  const { toggleModal } = useUIState()
+
+  const handleDeviceAction = async () => {
+    if (connectionSummary.isConnected) {
+      try {
+        await disconnectDevice()
+      } catch (error) {
+        console.error('断开连接失败:', error)
+      }
+    } else {
+      toggleModal('deviceSelector', true)
+    }
+  }
+
+  const handleStartTest = () => {
+    if (!connectionSummary.isConnected) {
+      toggleModal('deviceSelector', true)
+      return
+    }
+    toggleModal('testConfig', true)
+  }
+
+  return (
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      {/* 页面标题 */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">蓝牙门锁测试</h1>
+          <p className="text-blue-100">
+            测试数据概览和统计信息
+          </p>
         </div>
       </div>
-
-      {/* 设备连接状态 */}
-      <ConnectionCard />
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-2 gap-4">
-        <StatusCard 
-          title="测试次数" 
-          value={stats.totalTests.toLocaleString()} 
-          icon={Hash} 
+        <StatusCard
+          title="总测试次数"
+          value={testSummary.statistics.totalTests.toLocaleString()}
+          icon={TrendingUp}
+          color="blue"
         />
-        <StatusCard 
-          title="成功率" 
-          value={stats.totalTests > 0 ? `${Math.round((stats.successfulUnlocks / stats.totalTests) * 100)}%` : '0%'} 
-          icon={CheckCircle} 
-          subtitle={`${stats.successfulUnlocks}/${stats.totalTests}`}
+        <StatusCard
+          title="成功率"
+          value={`${testSummary.statistics.successRate.toFixed(1)}%`}
+          icon={CheckCircle}
+          color="green"
         />
-        <StatusCard 
-          title="失败次数" 
-          value={stats.failedUnlocks.toLocaleString()} 
-          icon={AlertTriangle} 
+        <StatusCard
+          title="平均响应时间"
+          value={`${testSummary.statistics.avgResponseTime}ms`}
+          icon={Clock}
+          color="purple"
         />
-        <StatusCard 
-          title="测试时长" 
-          value={`${Math.floor(stats.currentDuration / 60)}:${(stats.currentDuration % 60).toString().padStart(2, '0')}`} 
-          icon={Clock} 
+        <StatusCard
+          title="最后测试"
+          value={testSummary.statistics.lastTestDate ? new Date(testSummary.statistics.lastTestDate).toLocaleDateString() : '暂无'}
+          icon={AlertCircle}
+          color="orange"
         />
       </div>
 
-      {/* 简化的响应时间图表 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
+      {/* 当前测试状态 */}
+      {testSummary.isRunning && (
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">测试进行中</h3>
+              <p className="text-green-100">
+                进度: {testSummary.currentTest?.currentCycle || 0} / {testSummary.currentTest?.totalCycles || 0}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold">{testSummary.progress.toFixed(1)}%</div>
+              <div className="text-green-100 text-sm">
+                {testSummary.isPaused ? '已暂停' : '运行中'}
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 bg-white/20 rounded-full h-2">
+            <div 
+              className="bg-white rounded-full h-2 transition-all duration-300"
+              style={{ width: `${testSummary.progress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
+      {/* 最近测试结果 */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900">蓝牙响应时间</h3>
-          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">
-            {realtimeData.length > 0 ? `${Math.round(realtimeData[realtimeData.length - 1].responseTime)}ms` : '0ms'}
-          </span>
+          <h3 className="text-lg font-semibold text-slate-800">测试概览</h3>
+          <button
+            onClick={() => toggleModal('settings', true)}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
-        <div className="h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={realtimeData}>
-              <Line 
-                type="monotone" 
-                dataKey="responseTime" 
-                stroke="#4f46e5" 
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-3 flex justify-between text-xs font-medium text-gray-600">
-          <span>最近20次测试</span>
-          <span>平均: {realtimeData.length > 0 ? Math.round(realtimeData.reduce((a, b) => a + b.responseTime, 0) / realtimeData.length) : 0}ms</span>
-        </div>
-      </div>
-
-      {/* 当前测试信息 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
-        <h3 className="text-base font-semibold text-gray-900 mb-5">当前测试信息</h3>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 mb-2">
-              {stats.totalTests > 0 ? Math.round((stats.successfulUnlocks / stats.totalTests) * 100) : 0}%
-            </div>
-            <div className="text-xs font-medium text-gray-600">成功率</div>
+        
+        {testSummary.statistics.totalTests === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>暂无测试数据</p>
+            <p className="text-sm mt-1">开始第一次测试来查看结果</p>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 mb-2">
-              {realtimeData.length > 0 ? Math.round(realtimeData.reduce((a, b) => a + b.responseTime, 0) / realtimeData.length) : 0}ms
+        ) : (
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-slate-800 mb-2">
+                {testSummary.statistics.successRate.toFixed(1)}%
+              </div>
+              <div className="text-sm text-slate-600">总体成功率</div>
             </div>
-            <div className="text-xs font-medium text-gray-600">平均响应</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 mb-2">
-              {Math.max(0, stats.successfulUnlocks - stats.failedUnlocks)}
+            <div className="text-center">
+              <div className="text-3xl font-bold text-slate-800 mb-2">
+                {testSummary.statistics.avgResponseTime}ms
+              </div>
+              <div className="text-sm text-slate-600">平均响应时间</div>
             </div>
-            <div className="text-xs font-medium text-gray-600">连续成功</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-slate-800 mb-2">
+                {testSummary.statistics.totalTests}
+              </div>
+              <div className="text-sm text-slate-600">总测试次数</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       
-      {/* 底部间距，防止被导航栏遮挡 */}
+      {/* 底部间距 */}
       <div className="h-20"></div>
-     </div>
-   )
- }
+    </div>
+  )
+}
 
 export default Dashboard
