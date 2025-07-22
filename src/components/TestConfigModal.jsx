@@ -15,11 +15,7 @@ const TestConfigModal = ({ onStartTest }) => {
   
   const [config, setConfig] = useState({
     testCount: testConfig.defaultTestCount || 100,
-    interval: testConfig.defaultInterval || 1000,
-    timeout: testConfig.timeout || 5000,
-    enableRetry: true,
-    maxRetries: 3,
-    retryDelay: 500
+    interval: testConfig.defaultInterval || 1000
   });
   
   const [errors, setErrors] = useState({});
@@ -34,22 +30,14 @@ const TestConfigModal = ({ onStartTest }) => {
         
         setConfig({
           testCount: savedTestConfig.defaultTestCount || testConfig.defaultTestCount || 100,
-          interval: savedTestConfig.defaultInterval || testConfig.defaultInterval || 1000,
-          timeout: savedTestConfig.timeout || testConfig.timeout || 5000,
-          enableRetry: savedTestConfig.enableRetry !== undefined ? savedTestConfig.enableRetry : true,
-          maxRetries: savedTestConfig.maxRetries || 3,
-          retryDelay: savedTestConfig.retryDelay || 500
+          interval: savedTestConfig.defaultInterval || testConfig.defaultInterval || 1000
         });
       } catch (error) {
         console.error('加载保存的配置失败:', error);
         // 使用默认配置
         setConfig({
           testCount: testConfig.defaultTestCount || 100,
-          interval: testConfig.defaultInterval || 1000,
-          timeout: testConfig.timeout || 5000,
-          enableRetry: true,
-          maxRetries: 3,
-          retryDelay: 500
+          interval: testConfig.defaultInterval || 1000
         });
       }
       setErrors({});
@@ -71,25 +59,7 @@ const TestConfigModal = ({ onStartTest }) => {
       newErrors.interval = '测试间隔不能超过60秒';
     }
 
-    if (!config.timeout || config.timeout < 1000) {
-      newErrors.timeout = '超时时间不能小于1秒';
-    } else if (config.timeout > 30000) {
-      newErrors.timeout = '超时时间不能超过30秒';
-    }
 
-    if (config.enableRetry) {
-      if (!config.maxRetries || config.maxRetries < 1) {
-        newErrors.maxRetries = '重试次数必须大于0';
-      } else if (config.maxRetries > 10) {
-        newErrors.maxRetries = '重试次数不能超过10';
-      }
-
-      if (!config.retryDelay || config.retryDelay < 100) {
-        newErrors.retryDelay = '重试延迟不能小于100毫秒';
-      } else if (config.retryDelay > 5000) {
-        newErrors.retryDelay = '重试延迟不能超过5秒';
-      }
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -145,11 +115,7 @@ const TestConfigModal = ({ onStartTest }) => {
         testConfig: {
           ...currentSettings.testConfig,
           defaultTestCount: config.testCount,
-          defaultInterval: config.interval,
-          timeout: config.timeout,
-          enableRetry: config.enableRetry,
-          maxRetries: config.maxRetries,
-          retryDelay: config.retryDelay
+          defaultInterval: config.interval
         }
       };
       
@@ -267,30 +233,7 @@ const TestConfigModal = ({ onStartTest }) => {
                 )}
               </div>
 
-              {/* 超时时间 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  超时时间 (毫秒)
-                </label>
-                <input
-                  type="number"
-                  value={config.timeout}
-                  onChange={(e) => handleInputChange('timeout', parseInt(e.target.value) || 0)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.timeout ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="输入超时时间"
-                  min="1000"
-                  max="30000"
-                />
-                {errors.timeout && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.timeout}
-                  </p>
-                )}
-              </div>
+
             </div>
 
 

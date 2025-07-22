@@ -69,11 +69,7 @@ const TestControl = () => {
           if (parsedSettings.testConfig) {
             savedConfig = {
               testCount: parsedSettings.testConfig.defaultTestCount || testConfig.defaultTestCount || 100,
-              interval: parsedSettings.testConfig.defaultInterval || testConfig.defaultInterval || 1000,
-              timeout: parsedSettings.testConfig.timeout || testConfig.timeout || 5000,
-              enableRetry: true,
-              maxRetries: 3,
-              retryDelay: 500
+              interval: parsedSettings.testConfig.defaultInterval || testConfig.defaultInterval || 1000
             };
           }
         }
@@ -84,11 +80,7 @@ const TestControl = () => {
       // 如果没有保存的配置，使用默认配置
       const configToUse = savedConfig || {
         testCount: testConfig.defaultTestCount || 100,
-        interval: testConfig.defaultInterval || 1000,
-        timeout: testConfig.timeout || 5000,
-        enableRetry: true,
-        maxRetries: 3,
-        retryDelay: 500
+        interval: testConfig.defaultInterval || 1000
       };
       
       console.log('使用的测试配置:', configToUse);
@@ -233,7 +225,7 @@ const TestControl = () => {
               <span className="font-medium text-slate-800">{connectedDevice.name || '未知设备'}</span>
             </div>
             
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-slate-50 rounded-xl">
                 <Battery className={`w-6 h-6 mx-auto mb-2 ${
                   connectedDevice.battery > 50 ? 'text-green-600' :
@@ -250,11 +242,7 @@ const TestControl = () => {
                 <div className="text-2xl font-bold text-slate-800">{connectedDevice.signalStrength || -50} dBm</div>
                 <div className="text-sm text-slate-600">信号强度</div>
               </div>
-              <div className="text-center p-4 bg-slate-50 rounded-xl">
-                <Zap className="w-6 h-6 mx-auto mb-2 text-slate-600" />
-                <div className="text-2xl font-bold text-slate-800">{connectedDevice.temperature || 25}°C</div>
-                <div className="text-sm text-slate-600">设备温度</div>
-              </div>
+
             </div>
             
             <div className="flex space-x-3">
@@ -300,20 +288,13 @@ const TestControl = () => {
           {!isRunning && (
             <>
               <button
-                onClick={handleStartTest}
-                disabled={!isConnected}
-                className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-              >
-                <Play className="w-5 h-5" />
-                <span>开始测试</span>
-              </button>
-              <button
                 onClick={() => toggleModal('testConfig', true)}
                 disabled={!isConnected}
-                className="px-6 py-3 bg-slate-600 text-white rounded-xl font-medium hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+                className="w-full px-6 py-3 bg-slate-600 text-white rounded-xl font-medium hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
                 title="测试配置"
               >
                 <Settings className="w-5 h-5" />
+                <span>测试配置</span>
               </button>
             </>
           )}
@@ -369,14 +350,6 @@ const TestControl = () => {
               <div>
                 <span className="text-slate-600">间隔时间:</span>
                 <span className="ml-2 font-medium">{currentTest.interval}ms</span>
-              </div>
-              <div>
-                <span className="text-slate-600">超时时间:</span>
-                <span className="ml-2 font-medium">{currentTest.timeout}ms</span>
-              </div>
-              <div>
-                <span className="text-slate-600">重试:</span>
-                <span className="ml-2 font-medium">{currentTest.retryEnabled ? '启用' : '禁用'}</span>
               </div>
             </div>
           </div>

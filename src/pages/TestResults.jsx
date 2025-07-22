@@ -1,359 +1,519 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Zap, Download, Filter, Calendar } from 'lucide-react'
-import { useTestHistory, useTestSummary } from '../hooks/useAppState'
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Zap, Download, Filter, Calendar, Search, Eye, Trash2, SortAsc, SortDesc, X, Info, Battery, Smartphone, FileText } from 'lucide-react'
+import { useTestHistory, useTestSummary, useTestState, useBluetoothState } from '../hooks/useAppState'
+import { formatTime, formatDuration } from '../utils/timeUtils'
 
 const TestResults = () => {
+  const [activeTab, setActiveTab] = useState('current') // current, history
   const [selectedTest, setSelectedTest] = useState('latest')
-  const [timeRange, setTimeRange] = useState('24h') // 1h, 6h, 24h, 7d
-  const [filterType, setFilterType] = useState('all') // all, success, failure
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [sortBy, setSortBy] = useState('startTime')
+  const [sortOrder, setSortOrder] = useState('desc')
+  const [selectedTests, setSelectedTests] = useState(new Set())
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedTestDetails, setSelectedTestDetails] = useState(null)
   
-  const { testHistory, loadTestHistory, deleteTestResult } = useTestHistory()
+  const { testHistory, loadTestHistory, deleteTestResult, exportTests } = useTestHistory()
   const { statistics, trends } = useTestSummary()
+  const { currentTest, isRunning } = useTestState()
+  const { device: connectedDevice } = useBluetoothState()
   
   // 加载测试历史数据
   useEffect(() => {
     loadTestHistory()
   }, [])
   
-  // 根据时间范围过滤数据
-  const getFilteredData = () => {
+  // 过滤和排序历史记录
+  const filteredAndSortedTests = useMemo(() => {
     if (!testHistory || testHistory.length === 0) return []
     
-    const now = new Date()
-    const timeRangeMs = {
-      '1h': 60 * 60 * 1000,
-      '6h': 6 * 60 * 60 * 1000,
-      '24h': 24 * 60 * 60 * 1000,
-      '7d': 7 * 24 * 60 * 60 * 1000
-    }[timeRange]
-    
-    return testHistory.filter(test => {
-      const testTime = new Date(test.startTime)
-      return now - testTime <= timeRangeMs
-    })
-  }
-  
-  // 生成性能趋势数据
-  const getPerformanceData = () => {
-    const filteredData = getFilteredData()
-    if (filteredData.length === 0) return []
-    
-    return filteredData.map(test => ({
-      time: new Date(test.startTime).toLocaleTimeString(),
-      responseTime: test.statistics?.avgResponseTime || 0,
-      successRate: test.statistics ? (test.statistics.successCount / test.statistics.totalAttempts) * 100 : 0,
-      attempts: test.statistics?.totalAttempts || 0,
-      testId: test.id
-    }))
-  }
-  
-  // 生成故障分析数据
-  const getFailureAnalysis = () => {
-    const filteredData = getFilteredData()
-    if (filteredData.length === 0) return []
-    
-    const failureTypes = {
-      'timeout': { name: '响应超时', count: 0 },
-      'connection': { name: '连接失败', count: 0 },
-      'device': { name: '设备错误', count: 0 },
-      'other': { name: '其他错误', count: 0 }
-    }
-    
-    filteredData.forEach(test => {
-      if (test.results) {
-        test.results.forEach(result => {
-          if (!result.success) {
-            const errorType = result.error?.type || 'other'
-            if (failureTypes[errorType]) {
-              failureTypes[errorType].count++
-            } else {
-              failureTypes.other.count++
-            }
+    return testHistory
+      .filter(test => {
+        // 搜索过滤
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase()
+          if (!test.id?.toLowerCase().includes(searchLower) &&
+              !test.deviceName?.toLowerCase().includes(searchLower)) {
+            return false
           }
-        })
-      }
-    })
-    
-    return Object.values(failureTypes)
-      .filter(type => type.count > 0)
-      .map(type => ({
-        type: type.name,
-        count: type.count,
-        percentage: (type.count / Object.values(failureTypes).reduce((sum, t) => sum + t.count, 0)) * 100
-      }))
-  }
+        }
+        
+        // 状态过滤
+        if (filterStatus !== 'all' && test.status !== filterStatus) {
+          return false
+        }
+        
+        return true
+      })
+      .sort((a, b) => {
+        let aValue, bValue
+        
+        switch (sortBy) {
+          case 'startTime':
+            aValue = new Date(a.startTime)
+            bValue = new Date(b.startTime)
+            break
+          case 'duration':
+            aValue = a.duration || 0
+            bValue = b.duration || 0
+            break
+          case 'totalCycles':
+            aValue = a.totalCycles || 0
+            bValue = b.totalCycles || 0
+            break
+          case 'successRate':
+            aValue = a.successCount / (a.successCount + a.failureCount) || 0
+            bValue = b.successCount / (b.successCount + b.failureCount) || 0
+            break
+          default:
+            return 0
+        }
+        
+        if (sortOrder === 'asc') {
+          return aValue > bValue ? 1 : -1
+        } else {
+          return aValue < bValue ? 1 : -1
+        }
+      })
+  }, [testHistory, searchTerm, filterStatus, sortBy, sortOrder])
   
-  // 获取当前选择的测试数据
-  const getCurrentTestData = () => {
-    if (selectedTest === 'latest') {
-      return testHistory?.[0] || null
+  // 导出功能
+  const handleExportAll = async () => {
+    try {
+      await exportTests(filteredAndSortedTests)
+    } catch (error) {
+      console.error('导出失败:', error)
     }
-    return testHistory?.find(test => test.id === selectedTest) || null
   }
   
-  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+  const handleExportSelected = async () => {
+    const selectedTestsArray = filteredAndSortedTests.filter(test => selectedTests.has(test.id))
+    try {
+      await exportTests(selectedTestsArray)
+    } catch (error) {
+      console.error('导出失败:', error)
+    }
+  }
   
-  const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }) => (
-    <div className="bg-white rounded-2xl p-4 shadow-lg border border-slate-100">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-slate-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
-          {change !== undefined && (
-            <div className={`flex items-center mt-2 text-sm font-medium ${
-              change > 0 ? 'text-red-600' : change < 0 ? 'text-green-600' : 'text-slate-600'
-            }`}>
-              {change > 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : 
-               change < 0 ? <TrendingDown className="w-4 h-4 mr-1" /> : null}
-              {change !== 0 ? `${Math.abs(change).toFixed(1)}%` : '无变化'}
+  // 当前测试结果组件
+  const CurrentTestResults = () => {
+    if (!currentTest && !isRunning) {
+      return (
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100 text-center">
+          <Info className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-600 mb-2">暂无测试结果</h3>
+          <p className="text-slate-500">请先进行测试以查看结果</p>
+        </div>
+      )
+    }
+
+    const test = currentTest
+    const successRate = test ? (test.successCount / (test.successCount + test.failureCount)) * 100 : 0
+    const successfulResults = test?.results?.filter(r => r.success && r.responseTime) || []
+    const avgResponseTime = successfulResults.length > 0 ? 
+      successfulResults.reduce((sum, r) => sum + r.responseTime, 0) / successfulResults.length : 0
+
+    return (
+      <div className="space-y-6">
+        {/* 设备信息 */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <Smartphone className="w-5 h-5 mr-2 text-blue-600" />
+            设备信息
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-slate-500">设备ID</p>
+              <p className="font-medium text-slate-800">{connectedDevice?.id || '未知设备'}</p>
             </div>
-          )}
+            <div>
+              <p className="text-sm text-slate-500">设备型号</p>
+              <p className="font-medium text-slate-800">{connectedDevice?.name || '未知型号'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">电量</p>
+              <div className="flex items-center">
+                <Battery className="w-4 h-4 mr-1 text-green-600" />
+                <p className="font-medium text-slate-800">{connectedDevice?.battery ? `${connectedDevice.battery}%` : '未知'}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className={`p-3 rounded-xl ${
-          color === 'blue' ? 'bg-blue-100 text-blue-600' :
-          color === 'green' ? 'bg-green-100 text-green-600' :
-          color === 'yellow' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-        }`}>
-          <Icon className="w-6 h-6" />
+
+        {/* 测试统计 */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <BarChart className="w-5 h-5 mr-2 text-blue-600" />
+            测试统计
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 rounded-xl p-4">
+              <p className="text-sm text-blue-600 font-medium">总次数</p>
+              <p className="text-2xl font-bold text-blue-700">{test?.totalCycles || 0}</p>
+            </div>
+            <div className="bg-green-50 rounded-xl p-4">
+              <p className="text-sm text-green-600 font-medium">成功次数</p>
+              <p className="text-2xl font-bold text-green-700">{test?.successCount || 0}</p>
+            </div>
+            <div className="bg-red-50 rounded-xl p-4">
+              <p className="text-sm text-red-600 font-medium">失败次数</p>
+              <p className="text-2xl font-bold text-red-700">{test?.failureCount || 0}</p>
+            </div>
+            <div className="bg-purple-50 rounded-xl p-4">
+              <p className="text-sm text-purple-600 font-medium">成功率</p>
+              <p className="text-2xl font-bold text-purple-700">{successRate.toFixed(1)}%</p>
+            </div>
+          </div>
         </div>
+
+        {/* 时间信息 */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-blue-600" />
+            时间信息
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-slate-500">测试时长</p>
+              <p className="font-medium text-slate-800">
+                {test ? formatDuration(new Date() - new Date(test.startTime)) : '未开始'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">间隔时间</p>
+              <p className="font-medium text-slate-800">{test?.config?.interval ? `${test.config.interval}ms` : '未设置'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">平均响应时间</p>
+              <p className="font-medium text-slate-800">{avgResponseTime > 0 ? `${avgResponseTime.toFixed(0)}ms` : '暂无数据'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 测试记录 */}
+        {test?.results && test.results.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">测试记录</h3>
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {test.results.slice(-10).map((result, index) => (
+                <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
+                  result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex items-center">
+                    {result.success ? (
+                      <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
+                    )}
+                    <span className="text-sm font-medium">
+                      第 {Math.max(1, test.results.length - 9) + index} 次
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-600">
+                      {result.responseTime ? `${result.responseTime}ms` : result.error || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // 历史记录组件
+  const TestHistoryView = () => (
+    <div className="space-y-6">
+      {/* 搜索和过滤 */}
+      <div className="bg-white rounded-2xl p-4 shadow-lg border border-slate-100">
+        <div className="flex flex-col space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="搜索测试记录..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex space-x-2">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+            >
+              <option value="all">所有状态</option>
+              <option value="completed">已完成</option>
+              <option value="running">运行中</option>
+              <option value="paused">已暂停</option>
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+            >
+              <option value="startTime">开始时间</option>
+              <option value="duration">测试时长</option>
+              <option value="totalCycles">测试次数</option>
+              <option value="successRate">成功率</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm hover:bg-slate-50"
+            >
+              {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 测试记录列表 */}
+      <div className="space-y-3">
+        {filteredAndSortedTests.map((test) => {
+          const successRate = (test.successCount / (test.successCount + test.failureCount)) * 100
+          return (
+            <div key={test.id} className="bg-white rounded-2xl p-4 shadow-lg border border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${
+                    test.status === 'completed' ? 'bg-green-500' :
+                    test.status === 'running' ? 'bg-blue-500' :
+                    test.status === 'paused' ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}></div>
+                  <div>
+                    <p className="font-medium text-slate-800">{test.id}</p>
+                    <p className="text-sm text-slate-500">
+                      {formatTime(new Date(test.startTime))}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      setSelectedTestDetails(test)
+                      setShowDetailsModal(true)
+                    }}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => deleteTestResult(test.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-slate-500">成功率</p>
+                  <p className="font-medium">{successRate.toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">总次数</p>
+                  <p className="font-medium">{test.totalCycles}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">时长</p>
+                  <p className="font-medium">{formatDuration(test.duration || 0)}</p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
-  
-  const performanceData = getPerformanceData()
-  const failureAnalysis = getFailureAnalysis()
-  const currentTest = getCurrentTestData()
-  
+
+  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      {/* 页面标题和筛选器 */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">测试结果分析</h1>
-            <p className="text-slate-600">实时监控测试数据与性能指标</p>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* 头部 */}
+      <div className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-slate-800">测试结果</h1>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleExportAll}
+                className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                导出全部
+              </button>
+              <button
+                 onClick={handleExportSelected}
+                 className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+               >
+                 <FileText className="w-4 h-4 mr-1" />
+                 导出选定
+               </button>
+            </div>
           </div>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors">
-            <Download className="w-4 h-4" />
-            <span>导出报告</span>
+        </div>
+      </div>
+
+      {/* 标签页 */}
+      <div className="px-4 py-4">
+        <div className="flex space-x-1 bg-slate-100 rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab('current')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'current'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            当前测试
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'history'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            历史记录
           </button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">选择测试</label>
-            <select 
-              value={selectedTest} 
-              onChange={(e) => setSelectedTest(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-            >
-              <option value="latest">最新测试</option>
-              {testHistory?.map(test => (
-                <option key={test.id} value={test.id}>
-                  {new Date(test.startTime).toLocaleString()}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">时间范围</label>
-            <select 
-              value={timeRange} 
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-            >
-              <option value="1h">最近1小时</option>
-              <option value="6h">最近6小时</option>
-              <option value="24h">最近24小时</option>
-              <option value="7d">最近7天</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">结果类型</label>
-            <select 
-              value={filterType} 
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-            >
-              <option value="all">全部结果</option>
-              <option value="success">仅成功</option>
-              <option value="failure">仅失败</option>
-            </select>
-          </div>
-        </div>
       </div>
 
-      {/* 概览统计 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard 
-          title="总测试次数" 
-          value={statistics?.totalAttempts?.toLocaleString() || '0'} 
-          change={trends?.attemptsChange}
-          icon={Zap} 
-          color="blue" 
-        />
-        <StatCard 
-          title="成功率" 
-          value={statistics ? `${((statistics.successCount / statistics.totalAttempts) * 100).toFixed(1)}%` : '0%'} 
-          change={trends?.successRateChange}
-          icon={CheckCircle} 
-          color="green" 
-        />
-        <StatCard 
-          title="平均响应时间" 
-          value={`${statistics?.avgResponseTime?.toFixed(0) || 0}ms`} 
-          change={trends?.responseTimeChange}
-          icon={Clock} 
-          color="yellow" 
-        />
-        <StatCard 
-          title="失败次数" 
-          value={statistics?.failureCount?.toLocaleString() || '0'} 
-          change={trends?.failureChange}
-          icon={AlertTriangle} 
-          color="red" 
-        />
+      {/* 内容区域 */}
+      <div className="px-4">
+        {activeTab === 'current' ? <CurrentTestResults /> : <TestHistoryView />}
       </div>
 
-      {/* 响应时间趋势图已移除 */}
+      {/* 测试详情模态框 */}
+      {showDetailsModal && selectedTestDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-slate-800">测试详情</h2>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* 基本信息 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">基本信息</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-500">测试ID</p>
+                      <p className="font-medium">{selectedTestDetails.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">状态</p>
+                      <p className="font-medium">{selectedTestDetails.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">开始时间</p>
+                      <p className="font-medium">{formatTime(new Date(selectedTestDetails.startTime))}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">测试时长</p>
+                      <p className="font-medium">{formatDuration(selectedTestDetails.duration || 0)}</p>
+                    </div>
+                  </div>
+                </div>
 
-      {/* 成功率趋势图已移除 */}
+                {/* 统计信息 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">统计信息</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <p className="text-sm text-blue-600">总次数</p>
+                      <p className="text-xl font-bold text-blue-700">{selectedTestDetails.totalCycles}</p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <p className="text-sm text-green-600">成功次数</p>
+                      <p className="text-xl font-bold text-green-700">{selectedTestDetails.successCount}</p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-3">
+                      <p className="text-sm text-red-600">失败次数</p>
+                      <p className="text-xl font-bold text-red-700">{selectedTestDetails.failureCount}</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-3">
+                      <p className="text-sm text-purple-600">成功率</p>
+                      <p className="text-xl font-bold text-purple-700">
+                        {((selectedTestDetails.successCount / (selectedTestDetails.successCount + selectedTestDetails.failureCount)) * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-      {/* 故障类型分析和测试频率分布图表已移除 */}
+                {/* 配置信息 */}
+                {selectedTestDetails.config && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-3">配置信息</h3>
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-slate-500">测试次数</p>
+                          <p className="font-medium">{selectedTestDetails.config.testCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">间隔时间</p>
+                          <p className="font-medium">{selectedTestDetails.config.interval}ms</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">超时时间</p>
+                          <p className="font-medium">{selectedTestDetails.config.timeout}ms</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">重试次数</p>
+                          <p className="font-medium">{selectedTestDetails.config.maxRetries}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-      {/* 当前测试详情 */}
-      {currentTest && (
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-blue-600" />
-            测试详情
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-slate-600">测试ID:</span>
-                <span className="font-medium">{currentTest.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">开始时间:</span>
-                <span className="font-medium">{new Date(currentTest.startTime).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">结束时间:</span>
-                <span className="font-medium">
-                  {currentTest.endTime ? new Date(currentTest.endTime).toLocaleString() : '进行中'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">测试状态:</span>
-                <span className={`font-medium ${
-                  currentTest.status === 'completed' ? 'text-green-600' :
-                  currentTest.status === 'running' ? 'text-blue-600' :
-                  currentTest.status === 'paused' ? 'text-yellow-600' : 'text-red-600'
-                }`}>
-                  {currentTest.status === 'completed' ? '已完成' :
-                   currentTest.status === 'running' ? '运行中' :
-                   currentTest.status === 'paused' ? '已暂停' : '已停止'}
-                </span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-slate-600">总测试次数:</span>
-                <span className="font-medium">{currentTest.config?.cycles || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">测试间隔:</span>
-                <span className="font-medium">{currentTest.config?.interval || 0}ms</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">超时时间:</span>
-                <span className="font-medium">{currentTest.config?.timeout || 0}ms</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">重试设置:</span>
-                <span className="font-medium">{currentTest.config?.retryEnabled ? '启用' : '禁用'}</span>
+                {/* 测试结果 */}
+                {selectedTestDetails.results && selectedTestDetails.results.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-3">测试结果</h3>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {selectedTestDetails.results.map((result, index) => (
+                        <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
+                          result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                        }`}>
+                          <div className="flex items-center">
+                            {result.success ? (
+                              <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
+                            )}
+                            <span className="text-sm font-medium">第 {index + 1} 次</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-slate-600">
+                              {result.responseTime ? `${result.responseTime}ms` : result.error || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* 测试总结与建议 */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-          <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-          测试总结与建议
-        </h3>
-        <div className="space-y-4">
-          {statistics && statistics.totalAttempts > 0 ? (
-            <>
-              <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-xl">
-                <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-slate-800">整体表现评估</p>
-                  <p className="text-sm text-slate-600">
-                    成功率 {((statistics.successCount / statistics.totalAttempts) * 100).toFixed(1)}%，
-                    平均响应时间 {statistics.avgResponseTime?.toFixed(0)}ms。
-                    {statistics.successCount / statistics.totalAttempts >= 0.95 ? 
-                      '设备表现优秀，运行稳定。' : 
-                      statistics.successCount / statistics.totalAttempts >= 0.90 ? 
-                        '设备表现良好，建议定期维护。' : 
-                        '设备表现需要改善，建议检查硬件状态。'
-                    }
-                  </p>
-                </div>
-              </div>
-              
-              {statistics.avgResponseTime > 200 && (
-                <div className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-xl">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-slate-800">响应时间警告</p>
-                    <p className="text-sm text-slate-600">
-                      平均响应时间超过200ms，建议检查蓝牙连接质量和设备性能。
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {statistics.failureCount > statistics.totalAttempts * 0.1 && (
-                <div className="flex items-start space-x-3 p-4 bg-red-50 rounded-xl">
-                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-slate-800">失败率过高</p>
-                    <p className="text-sm text-slate-600">
-                      失败率超过10%，建议检查设备硬件状态和蓝牙连接稳定性。
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-xl">
-                <Clock className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-slate-800">维护建议</p>
-                  <p className="text-sm text-slate-600">
-                    建议每完成1000次测试后进行设备检查，确保长期稳定运行。
-                  </p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-slate-400" />
-              <p className="text-slate-600">暂无测试数据</p>
-              <p className="text-sm text-slate-500">请先进行测试以查看结果分析</p>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* 底部间距 */}
-      <div className="h-20"></div>
     </div>
   )
 }

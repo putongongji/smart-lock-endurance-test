@@ -1,14 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Play, BarChart3, Settings as SettingsIcon, Database, Home, Bluetooth } from 'lucide-react'
-import Dashboard from './pages/Dashboard'
+import { Play, BarChart3, Bluetooth } from 'lucide-react'
 import TestControl from './pages/TestControl'
 import TestResults from './pages/TestResults'
-import Settings from './pages/Settings'
-import TestHistory from './pages/TestHistory'
 import { AlertContainer } from './components/Alert'
 import DeviceSelector from './components/DeviceSelector'
-import { useBluetoothState, useUIState } from './hooks/useAppState'
+import { useBluetoothState, useUIState, useTestState } from './hooks/useAppState'
 import BluetoothService from './services/BluetoothService.js'
 import StateService from './services/StateService.js'
 import TestService from './services/TestService.js'
@@ -29,17 +26,84 @@ function MobileHeader() {
           </div>
         </div>
         
-        {/* 连接状态指示器 */}
-        <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
-            isConnected ? 'bg-green-400' : 'bg-red-400'
-          }`}></div>
-          <span className="text-xs text-slate-600">
-            {isConnected ? (deviceName || '已连接') : '未连接'}
-          </span>
-        </div>
+
       </div>
     </header>
+  )
+}
+
+function StartTestButton() {
+  const { isConnected, device: connectedDevice } = useBluetoothState()
+  const { isRunning, startTest } = useTestState()
+  const [showConfirm, setShowConfirm] = useState(false)
+  
+  const handleStartTest = async () => {
+    if (!isConnected) {
+      alert('请先连接蓝牙设备')
+      return
+    }
+    
+    if (connectedDevice?.battery < 20) {
+      alert('设备电量低于20%，建议充电后再进行测试')
+    }
+    
+    try {
+      // 使用默认配置
+      const config = {
+        testCount: 100,
+        interval: 1000
+      }
+      
+      await startTest(config)
+      setShowConfirm(false)
+    } catch (error) {
+      alert(`启动测试失败: ${error.message}`)
+    }
+  }
+  
+  if (isRunning) {
+    return null // 测试运行时不显示按钮
+  }
+  
+  return (
+    <>
+      <div className="fixed bottom-20 left-0 right-0 px-4 pb-2">
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={!isConnected}
+          className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-blue-600 text-white rounded-2xl font-semibold hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+        >
+          <Play className="w-6 h-6" />
+          <span>开始测试</span>
+        </button>
+      </div>
+      
+      {/* 确认对话框 */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-slate-800 mb-2">确认开始测试</h3>
+              <p className="text-slate-600 mb-6">确定要开始新的测试吗？测试将使用默认配置进行。</p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleStartTest}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                >
+                  确认
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -47,11 +111,8 @@ function BottomNavigation() {
   const location = useLocation()
   
   const navItems = [
-    { path: '/', icon: Home, label: '概览' },
-    { path: '/test-control', icon: Play, label: '测试' },
-    { path: '/test-results', icon: BarChart3, label: '结果' },
-    { path: '/test-history', icon: Database, label: '历史' },
-    { path: '/settings', icon: SettingsIcon, label: '设置' }
+    { path: '/', icon: Play, label: '测试' },
+    { path: '/test-results', icon: BarChart3, label: '结果' }
   ]
   
   return (
@@ -119,14 +180,13 @@ function App() {
         <main className="flex-1 overflow-y-auto pb-24 px-1">
           <div className="max-w-md mx-auto">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/test-control" element={<TestControl />} />
+              <Route path="/" element={<TestControl />} />
               <Route path="/test-results" element={<TestResults />} />
-              <Route path="/test-history" element={<TestHistory />} />
-              <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>
         </main>
+        
+        <StartTestButton />
         <BottomNavigation />
         
         {/* 全局警报容器 */}
