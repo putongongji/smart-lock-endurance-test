@@ -220,29 +220,41 @@ class TestService {
    * 执行开锁测试
    */
   async performUnlockTest() {
-    const startTime = Date.now();
+    const commandSentTime = Date.now();
     
     try {
+      // 获取当前设备电量
+      const deviceStatus = await bluetoothService.getDeviceStatus();
+      const battery = deviceStatus?.battery || null;
+      
       await bluetoothService.sendUnlockCommand();
       
       // 等待响应（设置超时）
       const result = await this.waitForResponse('unlock', 5000);
       
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
+      const responseReceivedTime = Date.now();
+      const responseTime = responseReceivedTime - commandSentTime;
       
       return {
         success: result.success,
         responseTime,
+        commandSentTime: new Date(commandSentTime),
+        responseReceivedTime: new Date(responseReceivedTime),
+        result: result.success ? 'unlock_success' : 'unlock_failed',
+        battery,
         error: result.error || null
       };
     } catch (error) {
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
+      const responseReceivedTime = Date.now();
+      const responseTime = responseReceivedTime - commandSentTime;
       
       return {
         success: false,
         responseTime,
+        commandSentTime: new Date(commandSentTime),
+        responseReceivedTime: new Date(responseReceivedTime),
+        result: 'unlock_error',
+        battery: null,
         error: error.message
       };
     }
@@ -252,29 +264,41 @@ class TestService {
    * 执行锁定测试
    */
   async performLockTest() {
-    const startTime = Date.now();
+    const commandSentTime = Date.now();
     
     try {
+      // 获取当前设备电量
+      const deviceStatus = await bluetoothService.getDeviceStatus();
+      const battery = deviceStatus?.battery || null;
+      
       await bluetoothService.sendLockCommand();
       
       // 等待响应（设置超时）
       const result = await this.waitForResponse('lock', 5000);
       
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
+      const responseReceivedTime = Date.now();
+      const responseTime = responseReceivedTime - commandSentTime;
       
       return {
         success: result.success,
         responseTime,
+        commandSentTime: new Date(commandSentTime),
+        responseReceivedTime: new Date(responseReceivedTime),
+        result: result.success ? 'lock_success' : 'lock_failed',
+        battery,
         error: result.error || null
       };
     } catch (error) {
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
+      const responseReceivedTime = Date.now();
+      const responseTime = responseReceivedTime - commandSentTime;
       
       return {
         success: false,
         responseTime,
+        commandSentTime: new Date(commandSentTime),
+        responseReceivedTime: new Date(responseReceivedTime),
+        result: 'lock_error',
+        battery: null,
         error: error.message
       };
     }

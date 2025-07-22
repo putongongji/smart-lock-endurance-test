@@ -13,7 +13,7 @@ const DeviceSelector = () => {
   const { isConnected, device, isScanning, connectionError, scanDevices, connectDevice } = useBluetoothState();
   const { modals, toggleModal } = useUIState();
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [simulationMode, setSimulationMode] = useState(true);
+  const simulationMode = true; // 固定使用模拟模式
   const [simulatedDevices, setSimulatedDevices] = useState([]);
 
   // 获取模拟设备列表
@@ -24,31 +24,29 @@ const DeviceSelector = () => {
     }
   }, [simulationMode]);
 
+  // 组件加载时自动显示设备列表
+  useEffect(() => {
+    if (modals.deviceSelector) {
+      handleScanDevices();
+    }
+  }, [modals.deviceSelector]);
+
   const handleScanDevices = async () => {
     try {
-      if (simulationMode) {
-        // 模拟模式：直接显示模拟设备列表
-        const devices = BluetoothService.getSimulatedDevices();
-        setSimulatedDevices(devices);
-      } else {
-        // 真实模式：扫描真实设备
-        const device = await scanDevices();
-        setSelectedDevice(device);
-      }
+      // 固定使用模拟模式：直接显示模拟设备列表
+      const devices = BluetoothService.getSimulatedDevices();
+      setSimulatedDevices(devices);
     } catch (error) {
       console.error('扫描设备失败:', error);
     }
   };
 
-  const handleToggleSimulationMode = () => {
-    const newMode = !simulationMode;
-    setSimulationMode(newMode);
-    BluetoothService.setSimulationMode(newMode);
-    setSelectedDevice(null);
-    setSimulatedDevices([]);
-  };
+  // 移除模式切换功能，固定使用模拟模式
+  useEffect(() => {
+    BluetoothService.setSimulationMode(true);
+  }, []);
 
-  const handleConnectDevice = async (device = selectedDevice) => {
+  const handleTestDevice = async (device) => {
     if (!device) return;
     
     try {
@@ -114,78 +112,24 @@ const DeviceSelector = () => {
             </div>
           )}
 
-          {/* 模式切换 */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${
-                  simulationMode ? 'bg-orange-100' : 'bg-blue-100'
-                }`}>
-                  {simulationMode ? (
-                    <Monitor className={`w-5 h-5 ${
-                      simulationMode ? 'text-orange-600' : 'text-blue-600'
-                    }`} />
-                  ) : (
-                    <Smartphone className="w-5 h-5 text-blue-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    {simulationMode ? '模拟模式' : '真实设备模式'}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {simulationMode ? '使用虚拟设备进行测试' : '连接真实蓝牙设备'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleToggleSimulationMode}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  simulationMode
-                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                切换
-              </button>
-            </div>
-          </div>
 
-          {/* 扫描按钮 */}
-          <div className="mb-6">
-            <LoadingButton
-              isLoading={isScanning}
-              loadingText={simulationMode ? "加载设备..." : "扫描中..."}
-              onClick={handleScanDevices}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold transition-colors"
-            >
-              <Search className="w-5 h-5" />
-              <span>{simulationMode ? '显示模拟设备' : '扫描设备'}</span>
-            </LoadingButton>
-          </div>
+
+
 
           {/* 设备选择 */}
-          {simulationMode && simulatedDevices.length > 0 && (
+          {simulatedDevices.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">模拟设备列表</h3>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">设备列表</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {simulatedDevices.map((simDevice) => (
                   <div
                     key={simDevice.id}
-                    className={`border rounded-xl p-4 transition-all ${
-                      selectedDevice?.id === simDevice.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                    }`}
+                    className="border border-gray-200 hover:border-blue-300 hover:bg-gray-50 rounded-xl p-4 transition-all"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${
-                          selectedDevice?.id === simDevice.id ? 'bg-blue-200' : 'bg-orange-100'
-                        }`}>
-                          <Monitor className={`w-5 h-5 ${
-                            selectedDevice?.id === simDevice.id ? 'text-blue-600' : 'text-orange-600'
-                          }`} />
+                        <div className="p-2 rounded-lg bg-orange-100">
+                          <Monitor className="w-5 h-5 text-orange-600" />
                         </div>
                         <div>
                           <p className="font-semibold text-gray-800">
@@ -211,20 +155,13 @@ const DeviceSelector = () => {
                     </div>
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => setSelectedDevice(simDevice)}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                          selectedDevice?.id === simDevice.id
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {selectedDevice?.id === simDevice.id ? '已选择' : '选择'}
-                      </button>
-                      <LoadingButton
-                         onClick={() => {
-                           setSelectedDevice(simDevice);
-                           handleConnectDevice(simDevice);
-                         }}
+                         onClick={() => {}}
+                         className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                       >
+                         测试
+                       </button>
+                       <LoadingButton
+                         onClick={() => handleTestDevice(simDevice)}
                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
                          loadingText="连接中..."
                        >
@@ -237,72 +174,11 @@ const DeviceSelector = () => {
             </div>
           )}
 
-          {/* 真实设备选择 */}
-          {!simulationMode && selectedDevice && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">发现的设备</h3>
-              <div className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Bluetooth className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">
-                        {selectedDevice.name || '未知设备'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        ID: {selectedDevice.id?.slice(0, 8)}...
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Wifi className="w-4 h-4 text-green-500" />
-                    <Battery className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* 连接按钮 */}
-          {selectedDevice && (
-            <div className="flex space-x-3">
-              <button
-                onClick={handleClose}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-semibold transition-colors"
-              >
-                取消
-              </button>
-              <LoadingButton
-                onClick={handleConnectDevice}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-semibold transition-colors"
-                loadingText="连接中..."
-              >
-                连接设备
-              </LoadingButton>
-            </div>
-          )}
 
-          {/* 使用说明 */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-            <h4 className="font-semibold text-gray-800 mb-2">使用说明</h4>
-            {simulationMode ? (
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• 模拟模式无需真实设备</li>
-                <li>• 选择任意模拟设备进行测试</li>
-                <li>• 模拟设备会响应所有命令</li>
-                <li>• 适合功能测试和演示</li>
-              </ul>
-            ) : (
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• 确保智能锁设备已开启蓝牙</li>
-                <li>• 设备需要在可发现模式</li>
-                <li>• 首次连接可能需要配对</li>
-                <li>• 连接距离建议在10米以内</li>
-              </ul>
-            )}
-          </div>
+
+
+
         </div>
       </div>
     </div>
