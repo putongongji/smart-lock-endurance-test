@@ -19,28 +19,44 @@ class BluetoothService {
     this.simulationMode = true; // 默认开启模拟模式
     this.simulatedDevices = [
       { 
-        id: 'sim-001', 
+        id: 'SL001', 
         name: '智能锁-001', 
         battery: 85, 
         signalStrength: -45, 
         temperature: 25, 
-        lockStatus: 'locked' 
+        lockStatus: 'locked',
+        status: '已领锁',
+        address: '全民小镇'
       },
       { 
-        id: 'sim-002', 
+        id: 'SL002', 
         name: '智能锁-002', 
         battery: 92, 
         signalStrength: -38, 
         temperature: 23, 
-        lockStatus: 'unlocked' 
+        lockStatus: 'unlocked',
+        status: '未领锁',
+        address: '非全民小镇'
       },
       { 
-        id: 'sim-003', 
+        id: 'SL003', 
         name: 'SmartLock-003', 
         battery: 67, 
         signalStrength: -52, 
         temperature: 27, 
-        lockStatus: 'locked' 
+        lockStatus: 'locked',
+        status: '未绑定',
+        address: '全民小镇'
+      },
+      { 
+        id: 'SL004', 
+        name: 'SmartLock-004', 
+        battery: 78, 
+        signalStrength: -41, 
+        temperature: 24, 
+        lockStatus: 'unlocked',
+        status: '已领锁',
+        address: '非全民小镇'
       }
     ];
     this.currentSimulatedDevice = null;

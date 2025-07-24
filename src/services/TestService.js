@@ -468,11 +468,14 @@ class TestService {
    * 生成测试ID
    */
   generateTestId() {
-    const now = new Date();
-    const dateStr = now.toISOString().slice(2, 10).replace(/-/g, ''); // YYMMDD
-    const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, ''); // HHMMSS
-    const randomStr = Math.random().toString(36).substr(2, 4); // 4位随机字符
-    return `T${dateStr}${timeStr}${randomStr}`;
+    // 从localStorage获取当前的测试计数器
+    let testCounter = parseInt(localStorage.getItem('testCounter') || '0');
+    testCounter += 1;
+    
+    // 保存更新后的计数器
+    localStorage.setItem('testCounter', testCounter.toString());
+    
+    return `Test-${testCounter}`;
   }
 
   /**

@@ -79,7 +79,6 @@ const DeviceSelector = () => {
               </div>
               <div>
                 <h2 className="text-xl font-bold">设备连接</h2>
-                <p className="text-blue-100 text-sm">扫描并连接智能锁设备</p>
               </div>
             </div>
             <button
@@ -119,7 +118,6 @@ const DeviceSelector = () => {
           {/* 设备选择 */}
           {simulatedDevices.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">设备列表</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {simulatedDevices.map((simDevice) => (
                   <div
@@ -133,24 +131,21 @@ const DeviceSelector = () => {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-800">
-                            {simDevice.name}
+                            {simDevice.id}
                           </p>
                           <p className="text-sm text-gray-500">
-                            ID: {simDevice.id} • 状态: {simDevice.status === 'locked' ? '已锁定' : '已解锁'}
+                            状态: {simDevice.status} • 地址: {simDevice.address}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="flex items-center space-x-1">
-                          <Battery className={`w-4 h-4 ${
-                            simDevice.battery > 50 ? 'text-green-500' : 
-                            simDevice.battery > 20 ? 'text-yellow-500' : 'text-red-500'
+                          <Wifi className={`w-4 h-4 ${
+                            simDevice.signalStrength > -40 ? 'text-green-500' : 
+                            simDevice.signalStrength > -60 ? 'text-yellow-500' : 'text-red-500'
                           }`} />
-                          <span className="text-sm text-gray-600">{simDevice.battery}%</span>
+                          <span className="text-sm text-gray-600">{simDevice.signalStrength}dBm</span>
                         </div>
-                        <div className={`w-2 h-2 rounded-full ${
-                          simDevice.status === 'locked' ? 'bg-red-400' : 'bg-green-400'
-                        }`}></div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
